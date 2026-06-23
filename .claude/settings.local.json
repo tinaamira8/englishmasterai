@@ -4,7 +4,8 @@
       "Bash(curl -s -X POST https://englishmasterai.com/api/chat -H 'Content-Type: application/json' -d '{\"messages\":[{\"role\":\"user\",\"content\":\"hello\"}]}')",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(vercel --prod)"
+      "Bash(vercel --prod)",
+      "Bash(vercel env *)"
     ]
   }
 }

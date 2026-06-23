@@ -950,6 +950,162 @@ function formatAIText(text) {
     .replace(/\n/g, '<br/>')
 }
 
+function trackStat(type) {
+  const today = new Date().toISOString().slice(0, 10)
+  const raw = localStorage.getItem('em-admin-stats')
+  const s = raw ? JSON.parse(raw) : { total: 0, chat: 0, write: 0, errors: 0, daily: {} }
+  s.total = (s.total || 0) + 1
+  s[type] = (s[type] || 0) + 1
+  s.daily[today] = (s.daily[today] || 0) + 1
+  localStorage.setItem('em-admin-stats', JSON.stringify(s))
+}
+
+function AdminDashboard() {
+  const [authed, setAuthed] = useState(false)
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [health, setHealth] = useState(null)
+  const [info, setInfo] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [stats, setStats] = useState({ total: 0, chat: 0, write: 0, errors: 0, daily: {} })
+
+  function loadStats() {
+    const raw = localStorage.getItem('em-admin-stats')
+    if (raw) setStats(JSON.parse(raw))
+  }
+
+  async function login() {
+    setLoading(true)
+    setError('')
+    try {
+      const [h, i] = await Promise.all([
+        fetch('/api/admin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password, action: 'health' }) }).then(r => r.json()),
+        fetch('/api/admin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password, action: 'info' }) }).then(r => r.json()),
+      ])
+      if (h.error === 'كلمة المرور غير صحيحة') { setError('كلمة المرور غير صحيحة'); return }
+      setHealth(h)
+      setInfo(i)
+      setAuthed(true)
+      loadStats()
+    } catch { setError('خطأ في الاتصال') } finally { setLoading(false) }
+  }
+
+  async function refresh() {
+    setLoading(true)
+    try {
+      const h = await fetch('/api/admin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password, action: 'health' }) }).then(r => r.json())
+      setHealth(h)
+      loadStats()
+    } catch {} finally { setLoading(false) }
+  }
+
+  function clearStats() {
+    if (confirm('هل تريد مسح جميع الإحصائيات؟')) {
+      localStorage.removeItem('em-admin-stats')
+      setStats({ total: 0, chat: 0, write: 0, errors: 0, daily: {} })
+    }
+  }
+
+  const last7 = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(); d.setDate(d.getDate() - (6 - i))
+    const key = d.toISOString().slice(0, 10)
+    return { day: d.toLocaleDateString('ar-SA', { weekday: 'short' }), count: stats.daily?.[key] || 0 }
+  })
+  const maxDay = Math.max(...last7.map(d => d.count), 1)
+  const estCost = ((stats.total || 0) * 0.003).toFixed(3)
+
+  if (!authed) {
+    return (
+      <div className="page" style={{ maxWidth: 420, margin: '0 auto' }}>
+        <div className="ai-settings-card">
+          <div className="ai-settings-icon">🔐</div>
+          <h2>لوحة الإدارة</h2>
+          <p className="ai-settings-desc">أدخل كلمة مرور المدير للدخول</p>
+          <input className="api-key-input" type="password" placeholder="كلمة المرور..."
+            value={password} onChange={e => setPassword(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && login()} dir="ltr" />
+          {error && <div className="ai-error">{error}</div>}
+          <button className="btn-primary" onClick={login} disabled={loading} style={{ width: '100%', marginTop: 12 }}>
+            {loading ? 'جاري التحقق...' : 'دخول'}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="page admin-page">
+      <div className="admin-header">
+        <div>
+          <h1>📊 لوحة الإدارة</h1>
+          <p>مرحباً بك في لوحة تحكم EnglishMaster AI</p>
+        </div>
+        <button className="btn-secondary btn-sm" onClick={refresh} disabled={loading}>
+          {loading ? '...' : '🔄 تحديث'}
+        </button>
+      </div>
+
+      <div className="admin-status-row">
+        <div className={`status-badge ${health?.status === 'ok' ? 'status-ok' : 'status-err'}`}>
+          {health?.status === 'ok' ? '✅ Anthropic API تعمل' : '❌ مشكلة في API'}
+        </div>
+        {info && <div className="status-badge status-info">🌍 {info.region}</div>}
+        {info && <div className="status-badge status-info">🔑 {info.env}</div>}
+      </div>
+
+      <div className="admin-cards">
+        <div className="admin-card">
+          <div className="admin-card-value">{stats.total || 0}</div>
+          <div className="admin-card-label">إجمالي طلبات AI</div>
+        </div>
+        <div className="admin-card">
+          <div className="admin-card-value">{stats.chat || 0}</div>
+          <div className="admin-card-label">محادثات المساعد</div>
+        </div>
+        <div className="admin-card">
+          <div className="admin-card-value">{stats.write || 0}</div>
+          <div className="admin-card-label">طلبات الكتابة</div>
+        </div>
+        <div className="admin-card admin-card-cost">
+          <div className="admin-card-value">${estCost}</div>
+          <div className="admin-card-label">تكلفة تقديرية</div>
+        </div>
+      </div>
+
+      <div className="admin-chart-card">
+        <div className="admin-section-title">النشاط - آخر ٧ أيام</div>
+        <div className="admin-bar-chart">
+          {last7.map((d, i) => (
+            <div key={i} className="admin-bar-col">
+              <div className="admin-bar-wrap">
+                <div className="admin-bar" style={{ height: `${Math.round((d.count / maxDay) * 100)}%` }}>
+                  {d.count > 0 && <span className="admin-bar-val">{d.count}</span>}
+                </div>
+              </div>
+              <div className="admin-bar-label">{d.day}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {info && (
+        <div className="admin-info-card">
+          <div className="admin-section-title">معلومات النظام</div>
+          <div className="admin-info-row"><span>Node.js</span><span dir="ltr">{info.node}</span></div>
+          <div className="admin-info-row"><span>الخادم</span><span dir="ltr">{info.deployment}</span></div>
+          <div className="admin-info-row"><span>الموقع</span><span>englishmasterai.com</span></div>
+        </div>
+      )}
+
+      <div style={{ textAlign: 'center', marginTop: 24 }}>
+        <button className="btn-secondary btn-sm" onClick={clearStats} style={{ color: 'var(--danger, #e24b4a)' }}>
+          🗑️ مسح الإحصائيات
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function PrivacyPolicy() {
   return (
     <div className="page legal-page">
@@ -1109,6 +1265,7 @@ function AITutor() {
       if (!res.ok) throw new Error(`${res.status}`)
       const data = await res.json()
       setMessages(prev => [...prev, { role: 'assistant', content: data.text }])
+      trackStat('chat')
     } catch (err) {
       const msg = err?.message || ''
       if (msg.includes('429')) setError('تم تجاوز حد الاستخدام. حاول بعد قليل.')
@@ -1324,6 +1481,7 @@ function WritingAssistant() {
       if (!res.ok) throw new Error(`${res.status}`)
       const data = await res.json()
       setResult(data.text)
+      trackStat('write')
     } catch (err) {
       const msg = err?.message || ''
       if (msg.includes('429')) setError('تم تجاوز حد الاستخدام. حاول بعد قليل.')
@@ -1512,6 +1670,7 @@ export default function App() {
         {page === 'writing' && <WritingAssistant />}
         {page === 'privacy' && <PrivacyPolicy />}
         {page === 'terms' && <TermsOfService />}
+        {page === 'admin' && <AdminDashboard />}
       </main>
       <footer className="footer">
         <p>© ٢٠٢٥ EnglishMaster · منصة تعليمية للناطقين بالعربية</p>
@@ -1519,6 +1678,8 @@ export default function App() {
           <button className="footer-link" onClick={() => setPage('privacy')}>سياسة الخصوصية</button>
           <span className="footer-sep">·</span>
           <button className="footer-link" onClick={() => setPage('terms')}>شروط الاستخدام</button>
+          <span className="footer-sep">·</span>
+          <button className="footer-link" onClick={() => setPage('admin')} style={{ opacity: 0.4, fontSize: '.75rem' }}>إدارة</button>
         </div>
       </footer>
     </>

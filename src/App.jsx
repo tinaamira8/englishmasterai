@@ -950,6 +950,135 @@ function formatAIText(text) {
     .replace(/\n/g, '<br/>')
 }
 
+function PrivacyPolicy() {
+  return (
+    <div className="page legal-page">
+      <div className="legal-header">
+        <h1>سياسة الخصوصية</h1>
+        <p>آخر تحديث: يونيو ٢٠٢٥</p>
+      </div>
+      <div className="legal-content">
+        <section>
+          <h2>١. مقدمة</h2>
+          <p>مرحباً بك في EnglishMaster AI (<strong>englishmasterai.com</strong>). نحن نحترم خصوصيتك ونلتزم بحماية بياناتك الشخصية. توضح هذه السياسة كيفية جمع معلوماتك واستخدامها وحمايتها.</p>
+        </section>
+        <section>
+          <h2>٢. المعلومات التي نجمعها</h2>
+          <p><strong>معلومات يقدمها المستخدم تلقائياً:</strong></p>
+          <ul>
+            <li>الرسائل والنصوص التي تكتبها في المساعد الذكي ومساعد الكتابة</li>
+            <li>الملفات والصور التي ترفعها للتحليل</li>
+          </ul>
+          <p><strong>معلومات تُجمع تلقائياً:</strong></p>
+          <ul>
+            <li>بيانات تقدمك في الدروس والاختبارات (مخزنة محلياً في متصفحك فقط)</li>
+            <li>بيانات الاستخدام الأساسية (عدد الزيارات، الصفحات المُشاهدة)</li>
+          </ul>
+        </section>
+        <section>
+          <h2>٣. كيف نستخدم معلوماتك</h2>
+          <ul>
+            <li>تقديم خدمة المساعد الذكي عبر Anthropic Claude API</li>
+            <li>تحسين تجربة التعلم وتخصيص المحتوى</li>
+            <li>تحليل الأداء العام للمنصة</li>
+          </ul>
+        </section>
+        <section>
+          <h2>٤. مشاركة البيانات مع أطراف ثالثة</h2>
+          <p>نشارك بعض البيانات مع الأطراف التالية فقط:</p>
+          <ul>
+            <li><strong>Anthropic:</strong> يتم إرسال الرسائل التي تكتبها إلى Anthropic Claude API لمعالجتها وتوليد الردود. تخضع هذه البيانات لـ <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener noreferrer">سياسة خصوصية Anthropic</a>.</li>
+            <li><strong>Vercel:</strong> نستضيف موقعنا على Vercel. راجع <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer">سياسة خصوصية Vercel</a>.</li>
+          </ul>
+          <p>لا نبيع بياناتك الشخصية لأي طرف ثالث.</p>
+        </section>
+        <section>
+          <h2>٥. تخزين البيانات</h2>
+          <p>بيانات تقدمك في الدروس والمفردات مخزنة محلياً في متصفحك (localStorage) فقط، ولا ترسل إلى خوادمنا. يمكنك حذفها في أي وقت بمسح بيانات المتصفح.</p>
+        </section>
+        <section>
+          <h2>٦. الأطفال</h2>
+          <p>خدمتنا موجهة للأشخاص الذين تجاوزوا ١٣ عاماً. إذا كنت تعلم أن طفلاً دون ١٣ سنة يستخدم المنصة، يرجى التواصل معنا.</p>
+        </section>
+        <section>
+          <h2>٧. حقوقك</h2>
+          <ul>
+            <li>حق الوصول إلى بياناتك الشخصية</li>
+            <li>حق تصحيح البيانات غير الدقيقة</li>
+            <li>حق حذف بياناتك</li>
+            <li>حق الاعتراض على المعالجة</li>
+          </ul>
+        </section>
+        <section>
+          <h2>٨. التواصل معنا</h2>
+          <p>لأي استفسار حول سياسة الخصوصية، تواصل معنا عبر البريد الإلكتروني: <strong>tinaamira8@gmail.com</strong></p>
+        </section>
+      </div>
+    </div>
+  )
+}
+
+function TermsOfService() {
+  return (
+    <div className="page legal-page">
+      <div className="legal-header">
+        <h1>شروط الاستخدام</h1>
+        <p>آخر تحديث: يونيو ٢٠٢٥</p>
+      </div>
+      <div className="legal-content">
+        <section>
+          <h2>١. القبول بالشروط</h2>
+          <p>باستخدامك لموقع EnglishMaster AI (<strong>englishmasterai.com</strong>)، فإنك توافق على الالتزام بهذه الشروط. إذا كنت لا توافق على أي من هذه الشروط، يرجى عدم استخدام الموقع.</p>
+        </section>
+        <section>
+          <h2>٢. وصف الخدمة</h2>
+          <p>EnglishMaster AI منصة تعليمية تقدم:</p>
+          <ul>
+            <li>دروساً تفاعلية لتعلم اللغة الإنجليزية</li>
+            <li>اختبارات ومفردات تعليمية</li>
+            <li>مساعد ذكي مدعوم بالذكاء الاصطناعي للإجابة على أسئلة اللغة</li>
+            <li>أداة لتحسين الكتابة الإنجليزية</li>
+          </ul>
+        </section>
+        <section>
+          <h2>٣. الاستخدام المقبول</h2>
+          <p>يوافق المستخدم على:</p>
+          <ul>
+            <li>استخدام المنصة للأغراض التعليمية المشروعة فقط</li>
+            <li>عدم محاولة اختراق أو إساءة استخدام الخدمة</li>
+            <li>عدم إرسال محتوى مسيء أو غير قانوني</li>
+            <li>عدم استخدام المنصة لأغراض تجارية دون إذن مسبق</li>
+          </ul>
+        </section>
+        <section>
+          <h2>٤. الملكية الفكرية</h2>
+          <p>جميع محتويات الموقع، بما في ذلك النصوص والتصاميم والشعار، مملوكة لـ EnglishMaster AI. لا يحق نسخ أو توزيع أي محتوى دون إذن كتابي مسبق.</p>
+        </section>
+        <section>
+          <h2>٥. إخلاء المسؤولية</h2>
+          <p>تُقدَّم الخدمة "كما هي" دون ضمانات من أي نوع. لا نضمن دقة 100% لردود المساعد الذكي، إذ تعتمد على نماذج الذكاء الاصطناعي التي قد تحتوي على أخطاء. يُنصح دائماً بمراجعة المعلومات مع مصادر موثوقة.</p>
+        </section>
+        <section>
+          <h2>٦. حدود المسؤولية</h2>
+          <p>لن تكون EnglishMaster AI مسؤولة عن أي أضرار مباشرة أو غير مباشرة ناتجة عن استخدام الخدمة أو عدم القدرة على الوصول إليها.</p>
+        </section>
+        <section>
+          <h2>٧. التعديلات على الشروط</h2>
+          <p>نحتفظ بالحق في تعديل هذه الشروط في أي وقت. سيتم إخطار المستخدمين بأي تغييرات جوهرية عبر الموقع. الاستمرار في استخدام الخدمة بعد التعديل يعني قبولك للشروط الجديدة.</p>
+        </section>
+        <section>
+          <h2>٨. القانون المطبق</h2>
+          <p>تخضع هذه الشروط للقوانين المعمول بها. أي نزاع يُحل بالتراضي أولاً، وإن تعذر ذلك، يُلجأ إلى الجهات القانونية المختصة.</p>
+        </section>
+        <section>
+          <h2>٩. التواصل معنا</h2>
+          <p>لأي استفسار حول شروط الاستخدام: <strong>tinaamira8@gmail.com</strong></p>
+        </section>
+      </div>
+    </div>
+  )
+}
+
 function AITutor() {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
@@ -1381,9 +1510,16 @@ export default function App() {
         {page === 'vocabulary' && <Vocabulary progress={progress} onLearn={learnWord} />}
         {page === 'ai' && <AITutor />}
         {page === 'writing' && <WritingAssistant />}
+        {page === 'privacy' && <PrivacyPolicy />}
+        {page === 'terms' && <TermsOfService />}
       </main>
       <footer className="footer">
         <p>© ٢٠٢٥ EnglishMaster · منصة تعليمية للناطقين بالعربية</p>
+        <div className="footer-links">
+          <button className="footer-link" onClick={() => setPage('privacy')}>سياسة الخصوصية</button>
+          <span className="footer-sep">·</span>
+          <button className="footer-link" onClick={() => setPage('terms')}>شروط الاستخدام</button>
+        </div>
       </footer>
     </>
   )

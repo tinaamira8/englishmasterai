@@ -1258,3 +1258,19 @@ main {
   color: var(--text-secondary);
   background: var(--surface);
 }
+.footer-links { margin-top: 6px; display: flex; justify-content: center; gap: 8px; align-items: center; }
+.footer-link { background: none; border: none; color: var(--accent); font-size: .85rem; cursor: pointer; padding: 0; text-decoration: underline; }
+.footer-link:hover { opacity: .8; }
+.footer-sep { color: var(--text-secondary); }
+
+/* ── Legal Pages ─────────────────────────────────────────────────────────── */
+.legal-page { max-width: 760px; margin: 0 auto; }
+.legal-header { margin-bottom: 32px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.legal-header h1 { font-size: 1.8rem; margin: 0 0 6px; }
+.legal-header p { color: var(--text-secondary); margin: 0; font-size: .9rem; }
+.legal-content section { margin-bottom: 28px; }
+.legal-content h2 { font-size: 1.1rem; color: var(--accent); margin: 0 0 10px; }
+.legal-content p { line-height: 1.8; margin: 0 0 10px; color: var(--text-primary); }
+.legal-content ul { padding-right: 20px; margin: 0 0 10px; }
+.legal-content ul li { line-height: 1.8; color: var(--text-primary); margin-bottom: 4px; }
+.legal-content a { color: var(--accent); }

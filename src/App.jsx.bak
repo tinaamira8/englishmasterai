@@ -1,0 +1,780 @@
+import { useState, useEffect } from 'react'
+import './App.css'
+
+// ── Data ──────────────────────────────────────────────────────────────────────
+
+const LESSONS = [
+  {
+    id: 1, level: 'مبتدئ', title: 'التحيات والتعارف',
+    englishTitle: 'Greetings & Introductions',
+    icon: '👋', duration: '١٠ دقائق',
+    content: [
+      { type: 'text', body: 'تعلّم كيفية تحية الناس هو الخطوة الأولى في تعلم اللغة الإنجليزية. إليك أبرز التحيات الشائعة:' },
+      { type: 'phrase', items: [
+        { en: 'Hello / Hi', ar: 'مرحبا / أهلاً', note: 'تُستخدم في المواقف الرسمية وغير الرسمية' },
+        { en: 'Good morning', ar: 'صباح الخير', note: 'تحية الصباح' },
+        { en: 'Good afternoon', ar: 'مساء الخير', note: 'بعد الظهر' },
+        { en: 'Good evening', ar: 'مساء الخير', note: 'في المساء' },
+        { en: 'How are you?', ar: 'كيف حالك؟', note: 'للسؤال عن الحال' },
+        { en: 'Nice to meet you', ar: 'سعيد بلقائك', note: 'عند مقابلة شخص للمرة الأولى' },
+      ]},
+      { type: 'text', body: 'عند تقديم نفسك، قل: "My name is [اسمك]" أو ببساطة "I\'m [اسمك]"' },
+      { type: 'example', label: 'مثال على محادثة', body: 'A: Hello! My name is Sarah. Nice to meet you.\nب: مرحباً سارة! اسمي توم. كيف حالك؟\nA: I\'m doing great, thank you!\nب: أنا بخير، شكراً!' },
+    ],
+  },
+  {
+    id: 2, level: 'مبتدئ', title: 'الأرقام والعد',
+    englishTitle: 'Numbers & Counting',
+    icon: '🔢', duration: '١٢ دقيقة',
+    content: [
+      { type: 'text', body: 'الأرقام ضرورية في حياتنا اليومية — للتسوق، وقراءة الوقت، وذكر العمر، وغير ذلك.' },
+      { type: 'phrase', items: [
+        { en: 'One, Two, Three', ar: 'واحد، اثنان، ثلاثة', note: '١، ٢، ٣' },
+        { en: 'Four, Five, Six', ar: 'أربعة، خمسة، ستة', note: '٤، ٥، ٦' },
+        { en: 'Seven, Eight, Nine, Ten', ar: 'سبعة، ثمانية، تسعة، عشرة', note: '٧، ٨، ٩، ١٠' },
+        { en: 'Eleven, Twelve, Thirteen', ar: 'أحد عشر، اثنا عشر، ثلاثة عشر', note: '١١، ١٢، ١٣' },
+        { en: 'Twenty, Thirty, Forty', ar: 'عشرون، ثلاثون، أربعون', note: '٢٠، ٣٠، ٤٠' },
+        { en: 'Hundred / Thousand / Million', ar: 'مئة / ألف / مليون', note: '١٠٠ / ١٠٠٠ / ١٠٠٠٠٠٠' },
+      ]},
+      { type: 'example', label: 'أمثلة على الاستخدام', body: '"I have two brothers and one sister." — لديّ أخان وأخت واحدة\n"The shirt costs fifteen dollars." — قميص بخمسة عشر دولاراً\n"She is twenty-three years old." — عمرها ثلاثة وعشرون سنة' },
+    ],
+  },
+  {
+    id: 3, level: 'مبتدئ', title: 'الأفعال الشائعة',
+    englishTitle: 'Common Verbs',
+    icon: '⚡', duration: '١٥ دقيقة',
+    content: [
+      { type: 'text', body: 'الأفعال هي كلمات الفعل — تصف ما نقوم به. إليك أكثر الأفعال شيوعاً في الإنجليزية:' },
+      { type: 'phrase', items: [
+        { en: 'Be (am / is / are)', ar: 'يكون / هو / هي', note: 'للوصف أو الوجود' },
+        { en: 'Have', ar: 'يملك / عنده', note: 'للامتلاك' },
+        { en: 'Do', ar: 'يفعل / يقوم بـ', note: 'للتنفيذ' },
+        { en: 'Go', ar: 'يذهب', note: 'للتنقل' },
+        { en: 'Say / Tell', ar: 'يقول / يخبر', note: 'للكلام' },
+        { en: 'Get', ar: 'يحصل على / يصبح', note: 'للحصول' },
+        { en: 'Make', ar: 'يصنع / يجعل', note: 'للإنشاء' },
+        { en: 'Know', ar: 'يعرف', note: 'للمعرفة' },
+      ]},
+      { type: 'example', label: 'أمثلة في جمل', body: '"I am a student." — أنا طالب\n"She has a car." — لديها سيارة\n"They go to school every day." — يذهبون للمدرسة كل يوم\n"He makes breakfast." — يُعدّ وجبة الفطور' },
+    ],
+  },
+  {
+    id: 4, level: 'مبتدئ', title: 'الألوان والأشياء اليومية',
+    englishTitle: 'Colors & Everyday Objects',
+    icon: '🎨', duration: '١٠ دقائق',
+    content: [
+      { type: 'text', body: 'تعلّم أسماء الألوان والأشياء اليومية يساعدك على وصف العالم من حولك.' },
+      { type: 'phrase', items: [
+        { en: 'Red / Blue / Green', ar: 'أحمر / أزرق / أخضر', note: 'ألوان أساسية' },
+        { en: 'White / Black / Yellow', ar: 'أبيض / أسود / أصفر', note: 'ألوان أساسية' },
+        { en: 'Book / Pen / Table', ar: 'كتاب / قلم / طاولة', note: 'أشياء دراسية' },
+        { en: 'House / Door / Window', ar: 'بيت / باب / نافذة', note: 'أجزاء المنزل' },
+        { en: 'Water / Food / Bread', ar: 'ماء / طعام / خبز', note: 'أساسيات الأكل' },
+        { en: 'Car / Bus / Phone', ar: 'سيارة / حافلة / هاتف', note: 'وسائل النقل والتواصل' },
+      ]},
+      { type: 'example', label: 'أمثلة وصفية', body: '"The book is on the table." — الكتاب على الطاولة\n"I have a red car." — لديّ سيارة حمراء\n"She drinks water every morning." — تشرب الماء كل صباح' },
+    ],
+  },
+  {
+    id: 5, level: 'متوسط', title: 'المضارع البسيط والمستمر',
+    englishTitle: 'Present Simple & Continuous',
+    icon: '🕐', duration: '٢٠ دقيقة',
+    content: [
+      { type: 'text', body: 'في الإنجليزية يوجد نوعان رئيسيان من المضارع، لكل منهما استخدام مختلف:' },
+      { type: 'phrase', items: [
+        { en: 'I work every day.', ar: 'أعمل كل يوم.', note: 'مضارع بسيط — عادة متكررة' },
+        { en: 'I am working now.', ar: 'أنا أعمل الآن.', note: 'مضارع مستمر — حدث يجري الآن' },
+        { en: 'She plays football.', ar: 'هي تلعب كرة القدم.', note: 'حقيقة عامة' },
+        { en: 'She is playing football.', ar: 'هي تلعب كرة القدم الآن.', note: 'تلعب في هذه اللحظة' },
+      ]},
+      { type: 'text', body: 'ملاحظة مهمة: بعض الأفعال مثل (know, love, believe) لا تُستخدم عادةً مع المستمر.' },
+      { type: 'example', label: 'مقارنة بين النوعين', body: 'Simple: "I drink coffee every morning." — أشرب القهوة كل صباح (عادة)\nContinuous: "I am drinking coffee right now." — أنا أشرب القهوة الآن (هذه اللحظة)' },
+    ],
+  },
+  {
+    id: 6, level: 'متوسط', title: 'الماضي البسيط',
+    englishTitle: 'Simple Past Tense',
+    icon: '📅', duration: '٢٠ دقيقة',
+    content: [
+      { type: 'text', body: 'يُستخدم الماضي البسيط للتعبير عن أحداث انتهت في الماضي. معظم الأفعال تأخذ "ed"، لكن هناك أفعال شاذة مهمة.' },
+      { type: 'phrase', items: [
+        { en: 'Walk → Walked', ar: 'يمشي → مشى', note: 'فعل منتظم' },
+        { en: 'Go → Went', ar: 'يذهب → ذهب', note: 'فعل شاذ' },
+        { en: 'Have → Had', ar: 'يملك → امتلك', note: 'فعل شاذ' },
+        { en: 'See → Saw', ar: 'يرى → رأى', note: 'فعل شاذ' },
+        { en: 'I didn\'t go.', ar: 'لم أذهب.', note: 'النفي: didn\'t + مصدر' },
+        { en: 'Did you go?', ar: 'هل ذهبت؟', note: 'السؤال: Did + فاعل + مصدر' },
+      ]},
+      { type: 'example', label: 'أمثلة', body: '"Yesterday I walked to the park." — أمس مشيت إلى الحديقة\n"We went to the cinema last Friday." — ذهبنا للسينما الجمعة الماضية\n"Did you eat breakfast?" — هل أكلت الفطور؟' },
+    ],
+  },
+  {
+    id: 7, level: 'متوسط', title: 'المستقبل',
+    englishTitle: 'Future Tense (will / going to)',
+    icon: '🚀', duration: '١٨ دقيقة',
+    content: [
+      { type: 'text', body: 'يوجد طريقتان شائعتان للتعبير عن المستقبل في الإنجليزية: will و going to.' },
+      { type: 'phrase', items: [
+        { en: 'I will call you.', ar: 'سأتصل بك.', note: 'will — قرار آني أو وعد' },
+        { en: 'I am going to travel.', ar: 'سأسافر. (مخطط)', note: 'going to — خطة مسبقة' },
+        { en: 'Will you help me?', ar: 'هل ستساعدني؟', note: 'سؤال بـ will' },
+        { en: 'It will rain tomorrow.', ar: 'ستمطر غداً.', note: 'توقع مستقبلي' },
+      ]},
+      { type: 'example', label: 'الفرق بين will و going to', body: '"I will help you." — (قرار الآن)\n"I am going to help you." — (قرارت هذا من قبل)\n\nكلاهما صحيح لكن السياق يحدد الأنسب.' },
+    ],
+  },
+  {
+    id: 8, level: 'متقدم', title: 'الجمل الشرطية',
+    englishTitle: 'Conditionals',
+    icon: '🔀', duration: '٢٥ دقيقة',
+    content: [
+      { type: 'text', body: 'الجمل الشرطية تعبّر عن مواقف تعتمد على شرط معين. هناك أربعة أنواع رئيسية:' },
+      { type: 'phrase', items: [
+        { en: 'If you heat water, it boils.', ar: 'إذا سخّنت الماء، يغلي.', note: 'الشرطي الصفري — حقائق عامة' },
+        { en: 'If it rains, I will stay home.', ar: 'إذا أمطرت، سأبقى في المنزل.', note: 'الشرطي الأول — مستقبل حقيقي' },
+        { en: 'If I had money, I would travel.', ar: 'لو كان عندي مال، لسافرت.', note: 'الشرطي الثاني — غير حقيقي في الحاضر' },
+        { en: 'If I had studied, I would have passed.', ar: 'لو كنت درست، لكنت نجحت.', note: 'الشرطي الثالث — غير حقيقي في الماضي' },
+      ]},
+      { type: 'example', label: 'شرطي مختلط', body: '"If I had taken that job (past), I would be in Paris now (present)."\nلو أخذت ذلك العمل (في الماضي)، لكنت في باريس الآن.' },
+    ],
+  },
+  {
+    id: 9, level: 'متقدم', title: 'المبني للمجهول',
+    englishTitle: 'Passive Voice',
+    icon: '🔄', duration: '٢٢ دقيقة',
+    content: [
+      { type: 'text', body: 'المبني للمجهول يُستخدم عندما يكون الفاعل غير معروف أو غير مهم. صيغته: to be + Past Participle.' },
+      { type: 'phrase', items: [
+        { en: 'The book is written.', ar: 'الكتاب مكتوب.', note: 'مضارع مبني للمجهول' },
+        { en: 'The car was stolen.', ar: 'السيارة سُرقت.', note: 'ماضٍ مبني للمجهول' },
+        { en: 'The letter will be sent.', ar: 'ستُرسَل الرسالة.', note: 'مستقبل مبني للمجهول' },
+        { en: 'English is spoken here.', ar: 'يُتحدث الإنجليزية هنا.', note: 'استخدام شائع جداً' },
+      ]},
+      { type: 'example', label: 'مقارنة المبني للمعلوم والمجهول', body: 'Active: "The teacher corrects the homework." — المعلم يصحح الواجب\nPassive: "The homework is corrected by the teacher." — الواجب يُصحَّح بواسطة المعلم' },
+    ],
+  },
+]
+
+const QUIZZES = [
+  {
+    id: 1, title: 'اختبار التحيات', lessonId: 1, icon: '👋',
+    questions: [
+      { q: 'ما التحية المناسبة في الصباح؟', options: ['Good morning', 'Good night', 'See you later', 'Goodbye'], answer: 0 },
+      { q: 'ماذا تقول عند مقابلة شخص للمرة الأولى؟', options: ['See you soon', 'Nice to meet you', 'How have you been?', 'Good job'], answer: 1 },
+      { q: 'أكمل الجملة: "My ___ is Ahmed."', options: ['word', 'name', 'place', 'thing'], answer: 1 },
+      { q: 'ما الرد المناسب على "How are you?"', options: ['I am five', 'My name is Ali', "I'm doing well, thank you!", 'The sky is blue'], answer: 2 },
+    ],
+  },
+  {
+    id: 2, title: 'اختبار الأرقام', lessonId: 2, icon: '🔢',
+    questions: [
+      { q: 'كيف تكتب الرقم ١٥ بالإنجليزية؟', options: ['Fifty', 'Fiveteen', 'Fifteen', 'Fiftieth'], answer: 2 },
+      { q: 'ما الذي يأتي بعد "nineteen"؟', options: ['Ninety', 'Twenty', 'Twelve', 'Nineteen-one'], answer: 1 },
+      { q: 'ما الكلمة الصحيحة للرقم ١٠٠٠؟', options: ['One hundred', 'Ten hundred', 'One thousand', 'One million'], answer: 2 },
+      { q: 'كيف تقول "عمرها ٢٣ سنة"؟', options: ['She is twenty three.', 'She is two-three.', 'She is twenti-three.', 'She is twenty-three years old.'], answer: 3 },
+    ],
+  },
+  {
+    id: 3, title: 'اختبار الأفعال الشائعة', lessonId: 3, icon: '⚡',
+    questions: [
+      { q: 'ما ترجمة "He makes breakfast"؟', options: ['هو يأكل الفطور', 'هو يُعدّ الفطور', 'هو يطلب الفطور', 'هو ينام بعد الفطور'], answer: 1 },
+      { q: 'أي جملة صحيحة نحوياً؟', options: ['She have a car.', 'She has a car.', 'She haves a car.', 'She is have a car.'], answer: 1 },
+      { q: '"They ___ to school every day."', options: ['is going', 'goes', 'go', 'going'], answer: 2 },
+      { q: 'ما معنى فعل "Know" بالعربية؟', options: ['يذهب', 'يصنع', 'يعرف', 'يملك'], answer: 2 },
+    ],
+  },
+  {
+    id: 4, title: 'اختبار المضارع', lessonId: 5, icon: '🕐',
+    questions: [
+      { q: 'أي جملة تستخدم المضارع المستمر بشكل صحيح؟', options: ['She walk to work.', 'She is walking to work.', 'She walks to work.', 'She walked to work.'], answer: 1 },
+      { q: '"I ___ coffee every morning." (عادة يومية)', options: ['am drinking', 'drank', 'drink', 'have drink'], answer: 2 },
+      { q: 'أي من هذه الأفعال لا يُستخدم عادةً مع المستمر؟', options: ['run', 'walk', 'know', 'eat'], answer: 2 },
+      { q: 'ما النفي الصحيح لـ "She works here"؟', options: ["She not works here", "She don't work here", "She doesn't work here", "She isn't works here"], answer: 2 },
+    ],
+  },
+  {
+    id: 5, title: 'اختبار الماضي البسيط', lessonId: 6, icon: '📅',
+    questions: [
+      { q: 'ما الماضي البسيط لفعل "go"؟', options: ['goed', 'gone', 'went', 'go'], answer: 2 },
+      { q: 'أي جملة صحيحة؟', options: ["I didn't went there.", "I didn't go there.", "I not went there.", "I did not went there."], answer: 1 },
+      { q: '"She ___ a great movie last night." (see)', options: ['sees', 'seen', 'see', 'saw'], answer: 3 },
+      { q: 'كيف تكوّن سؤالاً في الماضي؟', options: ['Were + subject + verb?', 'Did + subject + base verb?', 'Does + subject + past verb?', 'Subject + did + verb?'], answer: 1 },
+    ],
+  },
+]
+
+const VOCAB = [
+  { id: 1, word: 'Ambitious', type: 'adj', arabic: 'طموح', definition: 'Having a strong desire to succeed or achieve something', arabicDef: 'لديه رغبة قوية في النجاح أو تحقيق شيء ما', example: 'She is very ambitious and wants to become a CEO.' },
+  { id: 2, word: 'Persevere', type: 'verb', arabic: 'يثابر', definition: 'To continue despite difficulty or delay', arabicDef: 'الاستمرار رغم الصعوبات', example: 'You must persevere even when things get tough.' },
+  { id: 3, word: 'Eloquent', type: 'adj', arabic: 'فصيح / بليغ', definition: 'Fluent or persuasive in speaking or writing', arabicDef: 'طليق اللسان ومقنع في الكلام أو الكتابة', example: 'He gave an eloquent speech at the ceremony.' },
+  { id: 4, word: 'Contemplate', type: 'verb', arabic: 'يتأمل', definition: 'To think carefully about something', arabicDef: 'التفكير بعمق في شيء ما', example: 'She sat quietly to contemplate her decision.' },
+  { id: 5, word: 'Profound', type: 'adj', arabic: 'عميق / بالغ', definition: 'Very great or intense; having deep meaning', arabicDef: 'بالغ الأثر؛ ذو معنى عميق', example: 'Reading that book had a profound impact on me.' },
+  { id: 6, word: 'Diligent', type: 'adj', arabic: 'مجتهد / دؤوب', definition: 'Showing care and effort in work', arabicDef: 'يُظهر الاهتمام والجهد في عمله', example: 'A diligent student always reviews their notes.' },
+  { id: 7, word: 'Inevitable', type: 'adj', arabic: 'حتمي / لا مفر منه', definition: 'Certain to happen; unavoidable', arabicDef: 'مؤكد الحدوث ولا يمكن تجنبه', example: 'Change is inevitable in life.' },
+  { id: 8, word: 'Skeptical', type: 'adj', arabic: 'متشكك', definition: 'Not easily convinced; having doubts', arabicDef: 'لا يقتنع بسهولة؛ لديه شكوك', example: 'He was skeptical about the new plan.' },
+  { id: 9, word: 'Facilitate', type: 'verb', arabic: 'يُسهّل', definition: 'To make an action or process easier', arabicDef: 'جعل فعل أو عملية أسهل', example: 'The new software facilitates teamwork.' },
+  { id: 10, word: 'Resilient', type: 'adj', arabic: 'صامد / مرن', definition: 'Able to recover quickly from difficulty', arabicDef: 'قادر على التعافي بسرعة من الصعوبات', example: 'Children are often very resilient.' },
+  { id: 11, word: 'Collaborate', type: 'verb', arabic: 'يتعاون', definition: 'To work jointly with others on a project', arabicDef: 'العمل مع الآخرين بشكل مشترك', example: 'The two teams collaborated on the research.' },
+  { id: 12, word: 'Nuance', type: 'noun', arabic: 'فارق دقيق', definition: 'A subtle difference in meaning or expression', arabicDef: 'فرق دقيق في المعنى أو التعبير', example: 'There is a nuance between "sad" and "melancholy".' },
+  { id: 13, word: 'Consistent', type: 'adj', arabic: 'متسق / ثابت', definition: 'Always behaving in the same way', arabicDef: 'يتصرف دائماً بنفس الطريقة', example: 'Be consistent in your practice.' },
+  { id: 14, word: 'Acknowledge', type: 'verb', arabic: 'يُقرّ / يعترف', definition: 'To accept or admit something is true', arabicDef: 'قبول أو الاعتراف بصحة شيء ما', example: 'He acknowledged his mistake.' },
+  { id: 15, word: 'Significant', type: 'adj', arabic: 'هام / ذو أهمية', definition: 'Important or large enough to have an effect', arabicDef: 'مهم بما يكفي لإحداث تأثير', example: 'This is a significant achievement.' },
+  { id: 16, word: 'Fluent', type: 'adj', arabic: 'طليق اللسان', definition: 'Able to speak a language easily and accurately', arabicDef: 'القدرة على التحدث بلغة بسهولة ودقة', example: 'She is fluent in three languages.' },
+]
+
+// ── Speech ────────────────────────────────────────────────────────────────────
+
+function speak(text) {
+  if (!window.speechSynthesis) return
+  window.speechSynthesis.cancel()
+  const utt = new SpeechSynthesisUtterance(text)
+  utt.lang = 'en-US'
+  utt.rate = 0.85
+  utt.pitch = 1
+  // prefer a native English voice if available
+  const voices = window.speechSynthesis.getVoices()
+  const en = voices.find(v => v.lang.startsWith('en') && v.localService) ||
+             voices.find(v => v.lang.startsWith('en'))
+  if (en) utt.voice = en
+  window.speechSynthesis.speak(utt)
+}
+
+function SpeakBtn({ text, size = 'md' }) {
+  const [playing, setPlaying] = useState(false)
+  function handleClick(e) {
+    e.stopPropagation()
+    setPlaying(true)
+    const utt = new SpeechSynthesisUtterance(text)
+    utt.lang = 'en-US'
+    utt.rate = 0.85
+    utt.pitch = 1
+    const voices = window.speechSynthesis.getVoices()
+    const en = voices.find(v => v.lang.startsWith('en') && v.localService) ||
+               voices.find(v => v.lang.startsWith('en'))
+    if (en) utt.voice = en
+    utt.onend = () => setPlaying(false)
+    utt.onerror = () => setPlaying(false)
+    window.speechSynthesis.cancel()
+    window.speechSynthesis.speak(utt)
+  }
+  return (
+    <button className={`speak-btn speak-btn-${size} ${playing ? 'playing' : ''}`}
+      onClick={handleClick} title={`نطق: ${text}`} aria-label="استمع إلى النطق">
+      {playing ? '🔊' : '🔈'}
+    </button>
+  )
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function useLocalStorage(key, initial) {
+  const [val, setVal] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(key)) ?? initial }
+    catch { return initial }
+  })
+  useEffect(() => { localStorage.setItem(key, JSON.stringify(val)) }, [key, val])
+  return [val, setVal]
+}
+
+const LEVELS = ['مبتدئ', 'متوسط', 'متقدم']
+const LEVEL_COLOR = { 'مبتدئ': 'green', 'متوسط': 'blue', 'متقدم': 'purple' }
+
+// ── Nav ───────────────────────────────────────────────────────────────────────
+
+function Nav({ page, setPage, streak }) {
+  const [menuOpen, setMenuOpen] = useState(false)
+  const links = [
+    { id: 'home', label: 'الرئيسية' },
+    { id: 'lessons', label: 'الدروس' },
+    { id: 'quizzes', label: 'الاختبارات' },
+    { id: 'vocabulary', label: 'المفردات' },
+  ]
+  return (
+    <nav className="nav">
+      <button className="menu-toggle" onClick={() => setMenuOpen(v => !v)} aria-label="قائمة">
+        {menuOpen ? '✕' : '☰'}
+      </button>
+      <div className={`nav-links ${menuOpen ? 'open' : ''}`}>
+        {links.map(l => (
+          <button key={l.id} className={`nav-link ${page === l.id ? 'active' : ''}`}
+            onClick={() => { setPage(l.id); setMenuOpen(false) }}>{l.label}</button>
+        ))}
+      </div>
+      <button className="nav-brand" onClick={() => setPage('home')}>
+        <span>English<strong>Master</strong></span>
+        <span className="nav-logo">🇬🇧</span>
+      </button>
+      <div className="nav-right">
+        <span className="streak-badge" title="أيام متتالية">🔥 {streak}</span>
+      </div>
+    </nav>
+  )
+}
+
+// ── Home ──────────────────────────────────────────────────────────────────────
+
+function Home({ progress, setPage }) {
+  const completedLessons = Object.keys(progress.lessons || {}).filter(k => progress.lessons[k]).length
+  const completedQuizzes = Object.keys(progress.quizzes || {}).length
+  const vocabLearned = (progress.vocab || []).length
+
+  const stats = [
+    { label: 'دروس مكتملة', value: completedLessons, total: LESSONS.length, icon: '📚' },
+    { label: 'اختبارات مكتملة', value: completedQuizzes, total: QUIZZES.length, icon: '✅' },
+    { label: 'كلمات محفوظة', value: vocabLearned, total: VOCAB.length, icon: '📝' },
+  ]
+
+  const nextLesson = LESSONS.find(l => !progress.lessons?.[l.id])
+  const nextQuiz = QUIZZES.find(q => !progress.quizzes?.[q.id])
+
+  return (
+    <div className="page home-page">
+      <div className="hero">
+        <div className="hero-badge">🇬🇧 منصة تعلم اللغة الإنجليزية</div>
+        <h1>تعلّم الإنجليزية،<br /><span className="accent">خطوة بخطوة</span></h1>
+        <p className="hero-sub">اكتسب مهارات اللغة الإنجليزية الحقيقية من خلال دروس منظمة، اختبارات تفاعلية، وتمارين مفردات — كل شيء مشروح بالعربية.</p>
+        <div className="hero-actions">
+          <button className="btn-primary" onClick={() => setPage('lessons')}>ابدأ التعلم</button>
+          <button className="btn-secondary" onClick={() => setPage('quizzes')}>اختبر نفسك</button>
+        </div>
+      </div>
+
+      <div className="stats-row">
+        {stats.map(s => (
+          <div key={s.label} className="stat-card">
+            <div className="stat-icon">{s.icon}</div>
+            <div className="stat-number">{s.value}<span className="stat-total">/{s.total}</span></div>
+            <div className="stat-label">{s.label}</div>
+            <div className="progress-bar"><div className="progress-fill" style={{ width: `${(s.value / s.total) * 100}%` }} /></div>
+          </div>
+        ))}
+      </div>
+
+      {(nextLesson || nextQuiz) && (
+        <div className="continue-section">
+          <h2>واصل رحلتك</h2>
+          <div className="continue-cards">
+            {nextLesson && (
+              <div className="continue-card" onClick={() => setPage('lessons')}>
+                <span className="continue-arrow">←</span>
+                <div>
+                  <div className="continue-type">الدرس التالي</div>
+                  <div className="continue-title">{nextLesson.title}</div>
+                  <div className="continue-sub">{nextLesson.englishTitle}</div>
+                  <div className={`level-badge ${LEVEL_COLOR[nextLesson.level]}`}>{nextLesson.level}</div>
+                </div>
+                <span className="continue-icon">{nextLesson.icon}</span>
+              </div>
+            )}
+            {nextQuiz && (
+              <div className="continue-card" onClick={() => setPage('quizzes')}>
+                <span className="continue-arrow">←</span>
+                <div>
+                  <div className="continue-type">الاختبار التالي</div>
+                  <div className="continue-title">{nextQuiz.title}</div>
+                </div>
+                <span className="continue-icon">{nextQuiz.icon}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="features-row">
+        {[
+          { icon: '📚', title: 'دروس منظمة', desc: `${LESSONS.length} درساً من المبتدئ إلى المتقدم — كل شيء مشروح بالعربية.` },
+          { icon: '🎯', title: 'اختبارات تفاعلية', desc: `${QUIZZES.length} اختبارات متعددة الخيارات لقياس مستواك بعد كل درس.` },
+          { icon: '🔤', title: 'بنك المفردات', desc: `${VOCAB.length} كلمة إنجليزية مع ترجمتها وشرحها بالعربية وأمثلة حية.` },
+          { icon: '📈', title: 'تتبع التقدم', desc: 'يُحفظ تقدمك تلقائياً. واصل من حيث توقفت في أي وقت.' },
+        ].map(f => (
+          <div key={f.title} className="feature-card">
+            <div className="feature-icon">{f.icon}</div>
+            <h3>{f.title}</h3>
+            <p>{f.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── Lessons ───────────────────────────────────────────────────────────────────
+
+function LessonCard({ lesson, done, onClick }) {
+  return (
+    <div className={`lesson-card ${done ? 'done' : ''}`} onClick={onClick}>
+      <div className="lesson-card-top">
+        <span className="lesson-icon">{lesson.icon}</span>
+        {done && <span className="done-badge">✓</span>}
+      </div>
+      <div className={`level-badge ${LEVEL_COLOR[lesson.level]}`}>{lesson.level}</div>
+      <h3 className="lesson-title">{lesson.title}</h3>
+      <div className="lesson-subtitle">{lesson.englishTitle}</div>
+      <div className="lesson-meta">⏱ {lesson.duration}</div>
+    </div>
+  )
+}
+
+function LessonDetail({ lesson, onBack, onComplete, done }) {
+  const [finished, setFinished] = useState(false)
+
+  function handleComplete() {
+    setFinished(true)
+    onComplete(lesson.id)
+  }
+
+  return (
+    <div className="page lesson-detail">
+      <button className="back-btn" onClick={onBack}>→ العودة إلى الدروس</button>
+      <div className="lesson-header">
+        <span className="lesson-icon-lg">{lesson.icon}</span>
+        <div>
+          <div className={`level-badge ${LEVEL_COLOR[lesson.level]}`}>{lesson.level}</div>
+          <h1>{lesson.title}</h1>
+          <div className="lesson-english-title">{lesson.englishTitle}</div>
+          <span className="lesson-meta">⏱ {lesson.duration}</span>
+        </div>
+      </div>
+      <div className="lesson-body">
+        {lesson.content.map((block, i) => {
+          if (block.type === 'text') return <p key={i} className="lesson-text">{block.body}</p>
+          if (block.type === 'phrase') return (
+            <div key={i} className="phrase-table">
+              {block.items.map((item, j) => (
+                <div key={j} className="phrase-row">
+                  <div className="phrase-en">
+                    <SpeakBtn text={item.en} size="sm" />
+                    {item.en}
+                  </div>
+                  <div className="phrase-ar">{item.ar}</div>
+                  <div className="phrase-note">{item.note}</div>
+                </div>
+              ))}
+            </div>
+          )
+          if (block.type === 'list') return (
+            <ul key={i} className="lesson-list">
+              {block.items.map((item, j) => <li key={j}>{item}</li>)}
+            </ul>
+          )
+          if (block.type === 'example') return (
+            <div key={i} className="lesson-example">
+              <div className="example-label">{block.label}</div>
+              <pre>{block.body}</pre>
+            </div>
+          )
+          return null
+        })}
+      </div>
+      {!done && !finished ? (
+        <button className="btn-primary complete-btn" onClick={handleComplete}>✓ أكملت هذا الدرس</button>
+      ) : (
+        <div className="completed-msg">✅ أحسنت! لقد أكملت هذا الدرس</div>
+      )}
+    </div>
+  )
+}
+
+function Lessons({ progress, onComplete }) {
+  const [active, setActive] = useState(null)
+  const [filter, setFilter] = useState('الكل')
+
+  if (active) {
+    const lesson = LESSONS.find(l => l.id === active)
+    return <LessonDetail lesson={lesson} onBack={() => setActive(null)}
+      onComplete={onComplete} done={progress.lessons?.[active]} />
+  }
+
+  const filtered = filter === 'الكل' ? LESSONS : LESSONS.filter(l => l.level === filter)
+
+  return (
+    <div className="page">
+      <div className="page-header">
+        <h1>الدروس</h1>
+        <p>تعلّم الإنجليزية خطوة بخطوة بدروس منظمة لكل المستويات — كل شيء مشروح بالعربية.</p>
+      </div>
+      <div className="filter-row">
+        {['الكل', ...LEVELS].map(f => (
+          <button key={f} className={`filter-btn ${filter === f ? 'active' : ''}`}
+            onClick={() => setFilter(f)}>{f}</button>
+        ))}
+      </div>
+      <div className="cards-grid">
+        {filtered.map(l => (
+          <LessonCard key={l.id} lesson={l} done={progress.lessons?.[l.id]} onClick={() => setActive(l.id)} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── Quizzes ───────────────────────────────────────────────────────────────────
+
+function QuizRunner({ quiz, onBack, onFinish, prevScore }) {
+  const [step, setStep] = useState(0)
+  const [selected, setSelected] = useState(null)
+  const [answers, setAnswers] = useState([])
+  const [done, setDone] = useState(false)
+
+  const q = quiz.questions[step]
+  const total = quiz.questions.length
+
+  function pick(i) {
+    if (selected !== null) return
+    setSelected(i)
+  }
+
+  function next() {
+    const newAnswers = [...answers, selected]
+    if (step + 1 < total) {
+      setAnswers(newAnswers)
+      setSelected(null)
+      setStep(s => s + 1)
+    } else {
+      const score = newAnswers.filter((a, i) => a === quiz.questions[i].answer).length
+      setAnswers(newAnswers)
+      setDone(true)
+      onFinish(quiz.id, score, total)
+    }
+  }
+
+  if (done) {
+    const score = answers.filter((a, i) => a === quiz.questions[i].answer).length
+    const pct = Math.round((score / total) * 100)
+    return (
+      <div className="page quiz-result">
+        <button className="back-btn" onClick={onBack}>→ العودة إلى الاختبارات</button>
+        <div className="result-card">
+          <div className="result-emoji">{pct >= 80 ? '🎉' : pct >= 50 ? '👍' : '📖'}</div>
+          <h2>انتهى الاختبار!</h2>
+          <div className="score-circle">
+            <span className="score-num">{score}</span>
+            <span className="score-den">/{total}</span>
+          </div>
+          <div className="score-pct">{pct}%</div>
+          <p className="result-msg">
+            {pct === 100 ? '🌟 ممتاز! إجابات مثالية!' :
+             pct >= 80 ? 'أحسنت! أداء رائع!' :
+             pct >= 50 ? 'جيد! راجع الدرس وحاول مجدداً.' :
+             'واصل المراجعة وحاول مرة أخرى!'}
+          </p>
+          {prevScore !== undefined && (
+            <div className="prev-score">أفضل نتيجة سابقة: {prevScore}/{total}</div>
+          )}
+          <div className="result-review">
+            {quiz.questions.map((q, i) => (
+              <div key={i} className={`review-item ${answers[i] === q.answer ? 'correct' : 'wrong'}`}>
+                <span className="review-icon">{answers[i] === q.answer ? '✓' : '✗'}</span>
+                <div>
+                  <div className="review-q">{q.q}</div>
+                  {answers[i] !== q.answer && (
+                    <div className="review-correct">الإجابة الصحيحة: {q.options[q.answer]}</div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          <button className="btn-primary" onClick={onBack}>العودة إلى الاختبارات</button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="page quiz-runner">
+      <button className="back-btn" onClick={onBack}>→ العودة إلى الاختبارات</button>
+      <div className="quiz-progress-row">
+        <span>{step + 1} / {total}</span>
+        <span>{quiz.title}</span>
+      </div>
+      <div className="quiz-progress-bar">
+        <div className="quiz-progress-fill" style={{ width: `${((step) / total) * 100}%` }} />
+      </div>
+      <div className="quiz-card">
+        <div className="question-num">السؤال {step + 1}</div>
+        <h2 className="question-text">{q.q}</h2>
+        <div className="options">
+          {q.options.map((opt, i) => {
+            let cls = 'option'
+            if (selected !== null) {
+              if (i === q.answer) cls += ' correct'
+              else if (i === selected) cls += ' wrong'
+            }
+            return (
+              <button key={i} className={cls} onClick={() => pick(i)}>
+                <span className="option-letter">{String.fromCharCode(65 + i)}</span>
+                {opt}
+              </button>
+            )
+          })}
+        </div>
+        {selected !== null && (
+          <button className="btn-primary next-btn" onClick={next}>
+            {step + 1 < total ? 'السؤال التالي ←' : 'عرض النتائج'}
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function Quizzes({ progress, onFinish }) {
+  const [active, setActive] = useState(null)
+
+  if (active !== null) {
+    const quiz = QUIZZES.find(q => q.id === active)
+    const prev = progress.quizzes?.[active]
+    return <QuizRunner quiz={quiz} onBack={() => setActive(null)}
+      onFinish={onFinish} prevScore={prev} />
+  }
+
+  return (
+    <div className="page">
+      <div className="page-header">
+        <h1>الاختبارات</h1>
+        <p>اختبر معلوماتك بأسئلة متعددة الخيارات بعد كل درس.</p>
+      </div>
+      <div className="cards-grid">
+        {QUIZZES.map(q => {
+          const score = progress.quizzes?.[q.id]
+          const pct = score !== undefined ? Math.round((score / q.questions.length) * 100) : null
+          return (
+            <div key={q.id} className="quiz-card-list" onClick={() => setActive(q.id)}>
+              <div className="quiz-card-top">
+                <span className="lesson-icon">{q.icon}</span>
+                {pct !== null && <span className={`score-badge ${pct >= 80 ? 'good' : pct >= 50 ? 'ok' : 'low'}`}>{pct}%</span>}
+              </div>
+              <h3>{q.title}</h3>
+              <div className="lesson-meta">{q.questions.length} أسئلة</div>
+              <button className="btn-quiz">{pct !== null ? 'أعد الاختبار' : 'ابدأ الاختبار'}</button>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ── Vocabulary ────────────────────────────────────────────────────────────────
+
+function VocabCard({ word, learned, onLearn }) {
+  const [flipped, setFlipped] = useState(false)
+  return (
+    <div className={`vocab-card ${flipped ? 'flipped' : ''} ${learned ? 'learned' : ''}`}
+      onClick={() => setFlipped(v => !v)}>
+      <div className="vocab-front">
+        <div className="vocab-word">{word.word}</div>
+        <SpeakBtn text={word.word} size="lg" />
+        <div className="vocab-type">{word.type}</div>
+        <div className="vocab-arabic-front">{word.arabic}</div>
+        <div className="flip-hint">اضغط لمعرفة المعنى</div>
+      </div>
+      <div className="vocab-back">
+        <div className="vocab-back-header">
+          <div className="vocab-arabic">{word.arabic}</div>
+          <SpeakBtn text={word.word} size="sm" />
+        </div>
+        <div className="vocab-def">{word.definition}</div>
+        <div className="vocab-arabic-def">{word.arabicDef}</div>
+        <div className="vocab-example">"{word.example}"</div>
+        <button className={`btn-learn ${learned ? 'learned' : ''}`}
+          onClick={e => { e.stopPropagation(); onLearn(word.id) }}>
+          {learned ? '✓ محفوظة' : 'حفظ الكلمة'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function Vocabulary({ progress, onLearn }) {
+  const [search, setSearch] = useState('')
+  const [filter, setFilter] = useState('all')
+  const learned = progress.vocab || []
+
+  const filtered = VOCAB
+    .filter(w => filter === 'all' ? true : filter === 'learned' ? learned.includes(w.id) : !learned.includes(w.id))
+    .filter(w =>
+      w.word.toLowerCase().includes(search.toLowerCase()) ||
+      w.arabic.includes(search) ||
+      w.definition.toLowerCase().includes(search.toLowerCase())
+    )
+
+  return (
+    <div className="page">
+      <div className="page-header">
+        <h1>بنك المفردات</h1>
+        <p>اضغط على البطاقة لمعرفة المعنى بالعربية والإنجليزية. احفظ الكلمات لتتبع تقدمك.</p>
+      </div>
+      <div className="vocab-controls">
+        <input className="vocab-search" placeholder="ابحث عن كلمة…" value={search}
+          onChange={e => setSearch(e.target.value)} />
+        <div className="filter-row">
+          {[['all', 'كل الكلمات'], ['new', 'لم تُحفظ'], ['learned', 'محفوظة']].map(([v, l]) => (
+            <button key={v} className={`filter-btn ${filter === v ? 'active' : ''}`}
+              onClick={() => setFilter(v)}>{l}</button>
+          ))}
+        </div>
+      </div>
+      <div className="vocab-stats">
+        <span>📝 {learned.length} / {VOCAB.length} كلمة محفوظة</span>
+        <div className="progress-bar wide"><div className="progress-fill" style={{ width: `${(learned.length / VOCAB.length) * 100}%` }} /></div>
+      </div>
+      <div className="vocab-grid">
+        {filtered.map(w => (
+          <VocabCard key={w.id} word={w} learned={learned.includes(w.id)} onLearn={onLearn} />
+        ))}
+        {filtered.length === 0 && <p className="empty">لا توجد كلمات مطابقة لبحثك.</p>}
+      </div>
+    </div>
+  )
+}
+
+// ── App ───────────────────────────────────────────────────────────────────────
+
+export default function App() {
+  const [page, setPage] = useState('home')
+  const [progress, setProgress] = useLocalStorage('em-progress', { lessons: {}, quizzes: {}, vocab: [] })
+  const [streak, setStreak] = useLocalStorage('em-streak', 0)
+
+  useEffect(() => {
+    const today = new Date().toDateString()
+    const last = localStorage.getItem('em-last-day')
+    if (last !== today) {
+      localStorage.setItem('em-last-day', today)
+      setStreak(s => s + 1)
+    }
+  }, [])
+
+  function completeLesson(id) {
+    setProgress(p => ({ ...p, lessons: { ...p.lessons, [id]: true } }))
+  }
+
+  function finishQuiz(id, score) {
+    setProgress(p => {
+      const prev = p.quizzes?.[id]
+      return { ...p, quizzes: { ...p.quizzes, [id]: prev === undefined ? score : Math.max(prev, score) } }
+    })
+  }
+
+  function learnWord(id) {
+    setProgress(p => {
+      const vocab = p.vocab || []
+      return { ...p, vocab: vocab.includes(id) ? vocab.filter(v => v !== id) : [...vocab, id] }
+    })
+  }
+
+  return (
+    <>
+      <Nav page={page} setPage={setPage} streak={streak} />
+      <main>
+        {page === 'home' && <Home progress={progress} setPage={setPage} />}
+        {page === 'lessons' && <Lessons progress={progress} onComplete={completeLesson} />}
+        {page === 'quizzes' && <Quizzes progress={progress} onFinish={finishQuiz} />}
+        {page === 'vocabulary' && <Vocabulary progress={progress} onLearn={learnWord} />}
+      </main>
+      <footer className="footer">
+        <p>© ٢٠٢٥ EnglishMaster · منصة تعليمية للناطقين بالعربية</p>
+      </footer>
+    </>
+  )
+}

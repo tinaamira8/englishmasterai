@@ -1767,6 +1767,7 @@ ${text}`
 }
 
 function WritingAssistant() {
+  const { lang } = useLang()
   const [text, setText] = useState('')
   const [question, setQuestion] = useState('')
   const [selectedTone, setSelectedTone] = useState('professional')
@@ -1856,16 +1857,16 @@ function WritingAssistant() {
       const res = await fetch('/api/write', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messageContent }),
+        body: JSON.stringify({ messageContent, lang }),
       })
-      if (!res.ok) throw new Error(`${res.status}`)
       const data = await res.json()
+      if (!res.ok) throw new Error(data.error || `${res.status}`)
       setResult(data.text)
       trackStat('write')
     } catch (err) {
       const msg = err?.message || ''
       if (msg.includes('429')) setError('تم تجاوز حد الاستخدام. حاول بعد قليل.')
-      else setError('خطأ في الاتصال. حاول مرة أخرى.')
+      else setError(msg || 'خطأ في الاتصال. حاول مرة أخرى.')
     } finally {
       setLoading(false)
       setActiveAction(null)

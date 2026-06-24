@@ -17,6 +17,9 @@ export default async function handler(req, res) {
         ? process.env.STRIPE_PRICE_LIFETIME
         : process.env.STRIPE_PRICE_MONTHLY
 
+    console.log('plan:', plan, 'priceId:', priceId)
+    if (!priceId) return res.status(400).json({ error: `Missing price ID for plan: ${plan}. Env var STRIPE_PRICE_LIFETIME = ${process.env.STRIPE_PRICE_LIFETIME ? 'set' : 'NOT SET'}` })
+
     const session = await stripe.checkout.sessions.create({
       mode: isLifetime ? 'payment' : 'subscription',
       payment_method_types: ['card'],

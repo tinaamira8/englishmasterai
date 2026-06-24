@@ -1,6 +1,10 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, createContext, useContext } from 'react'
 import './App.css'
 import { auth, db, googleProvider, saveProgress, loadProgress, saveSubscription, getSubscription, getTrialStatus, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, signInWithPopup, sendPasswordResetEmail, updateProfile } from './firebase.js'
+import { LANGUAGES, getTranslation } from './translations.js'
+
+const LangContext = createContext({ t: getTranslation('ar'), lang: 'ar', setLang: () => {} })
+function useLang() { return useContext(LangContext) }
 
 // ── Levels ────────────────────────────────────────────────────────────────────
 const LEVELS = [
@@ -469,6 +473,29 @@ function useLocalStorage(key, initial) {
 }
 
 // ── Nav ───────────────────────────────────────────────────────────────────────
+function LangSelector() {
+  const { lang, setLang } = useLang()
+  const [open, setOpen] = useState(false)
+  const current = LANGUAGES.find(l => l.code === lang)
+  return (
+    <div className="lang-selector">
+      <button className="lang-btn" onClick={() => setOpen(v => !v)} title="Language">
+        {current?.flag} <span className="lang-code">{current?.code?.toUpperCase()}</span>
+      </button>
+      {open && (
+        <div className="lang-dropdown">
+          {LANGUAGES.map(l => (
+            <button key={l.code} className={`lang-option ${l.code === lang ? 'active' : ''}`}
+              onClick={() => { setLang(l.code); setOpen(false) }}>
+              <span>{l.flag}</span> <span>{l.name}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function ThemeToggle() {
   const [dark, setDark] = useState(() => {
     const saved = localStorage.getItem('em-theme')
@@ -487,15 +514,16 @@ function ThemeToggle() {
 }
 
 function Nav({ page, setPage, streak, user, onAuthClick, onLogout }) {
+  const { t } = useLang()
   const [menuOpen, setMenuOpen] = useState(false)
   const links = [
-    { id: 'home', label: 'الرئيسية' },
-    { id: 'lessons', label: 'الدروس' },
-    { id: 'quizzes', label: 'الاختبارات' },
-    { id: 'vocabulary', label: 'المفردات' },
-    { id: 'ai', label: '🤖 مساعد ذكي' },
-    { id: 'writing', label: '✍️ الكتابة' },
-    { id: 'pricing', label: '💎 الأسعار' },
+    { id: 'home', label: t.home },
+    { id: 'lessons', label: t.lessons },
+    { id: 'quizzes', label: t.quizzes },
+    { id: 'vocabulary', label: t.vocabulary },
+    { id: 'ai', label: t.aiTutor },
+    { id: 'writing', label: t.writing },
+    { id: 'pricing', label: t.pricing },
   ]
   const initials = user?.displayName ? user.displayName.slice(0, 2).toUpperCase() : user?.email?.slice(0, 2).toUpperCase()
   return (
@@ -514,15 +542,16 @@ function Nav({ page, setPage, streak, user, onAuthClick, onLogout }) {
         <span className="nav-logo">🇬🇧</span>
       </button>
       <div className="nav-right">
+        <LangSelector />
         <ThemeToggle />
-        <span className="streak-badge" title="أيام متتالية">🔥 {streak}</span>
+        <span className="streak-badge" title={t.streak}>🔥 {streak}</span>
         {user ? (
           <div className="nav-user">
             <div className="nav-avatar" title={user.displayName || user.email}>{initials}</div>
-            <button className="nav-logout" onClick={onLogout} title="تسجيل خروج">خروج</button>
+            <button className="nav-logout" onClick={onLogout} title={t.logout}>{t.logout}</button>
           </div>
         ) : (
-          <button className="nav-login-btn" onClick={onAuthClick}>دخول</button>
+          <button className="nav-login-btn" onClick={onAuthClick}>{t.login}</button>
         )}
       </div>
     </nav>
@@ -629,14 +658,15 @@ function AuthModal({ onClose, onSuccess }) {
 
 // ── Home ──────────────────────────────────────────────────────────────────────
 function Home({ progress, setPage }) {
+  const { t } = useLang()
   const completedLessons = Object.keys(progress.lessons || {}).filter(k => progress.lessons[k]).length
   const completedQuizzes = Object.keys(progress.quizzes || {}).length
   const vocabLearned = (progress.vocab || []).length
 
   const stats = [
-    { label: 'دروس مكتملة', value: completedLessons, total: LESSONS.length, icon: '📚' },
-    { label: 'اختبارات مكتملة', value: completedQuizzes, total: QUIZZES.length, icon: '✅' },
-    { label: 'كلمات محفوظة', value: vocabLearned, total: VOCAB.length, icon: '📝' },
+    { label: t.lessonsCompleted, value: completedLessons, total: LESSONS.length, icon: '📚' },
+    { label: t.quizzesCompleted, value: completedQuizzes, total: QUIZZES.length, icon: '✅' },
+    { label: t.wordsLearned, value: vocabLearned, total: VOCAB.length, icon: '📝' },
   ]
 
   const nextLesson = LESSONS.find(l => !progress.lessons?.[l.id])
@@ -645,12 +675,12 @@ function Home({ progress, setPage }) {
   return (
     <div className="page home-page">
       <div className="hero">
-        <div className="hero-badge">🇬🇧 منصة تعلم اللغة الإنجليزية</div>
-        <h1>تعلّم الإنجليزية،<br /><span className="accent">خطوة بخطوة</span></h1>
-        <p className="hero-sub">اكتسب مهارات اللغة الإنجليزية الحقيقية من خلال دروس منظمة من A1 إلى C2، اختبارات تفاعلية، ومساعد ذكاء اصطناعي — كل شيء مشروح بالعربية.</p>
+        <div className="hero-badge">{t.heroBadge}</div>
+        <h1>{t.heroTitle1}<br /><span className="accent">{t.heroTitle2}</span></h1>
+        <p className="hero-sub">{t.heroSub}</p>
         <div className="hero-actions">
-          <button className="btn-primary" onClick={() => setPage('lessons')}>ابدأ التعلم</button>
-          <button className="btn-secondary" onClick={() => setPage('ai')}>🤖 المساعد الذكي</button>
+          <button className="btn-primary" onClick={() => setPage('lessons')}>{t.startLearning}</button>
+          <button className="btn-secondary" onClick={() => setPage('ai')}>{t.aiAssistant}</button>
         </div>
       </div>
 
@@ -675,7 +705,7 @@ function Home({ progress, setPage }) {
         const anyUnlocked = badges.some(b => b.unlocked)
         return anyUnlocked ? (
           <div className="achievements-section">
-            <h2>إنجازاتك</h2>
+            <h2>{t.achievements}</h2>
             <div className="badges-row">
               {badges.map(b => (
                 <div key={b.id} className={`achievement-badge ${b.unlocked ? 'unlocked' : 'locked'}`}>
@@ -692,13 +722,13 @@ function Home({ progress, setPage }) {
 
       {(nextLesson || nextQuiz) && (
         <div className="continue-section">
-          <h2>واصل رحلتك</h2>
+          <h2>{t.continueTitle}</h2>
           <div className="continue-cards">
             {nextLesson && (
               <div className="continue-card" onClick={() => setPage('lessons')}>
                 <span className="continue-arrow">←</span>
                 <div>
-                  <div className="continue-type">الدرس التالي</div>
+                  <div className="continue-type">{t.nextLesson}</div>
                   <div className="continue-title">{nextLesson.title}</div>
                   <div className="continue-sub">{nextLesson.englishTitle}</div>
                   <div className={`level-badge ${LEVEL_MAP[nextLesson.level]?.color}`}>{LEVEL_MAP[nextLesson.level]?.label} · {nextLesson.level}</div>
@@ -710,7 +740,7 @@ function Home({ progress, setPage }) {
               <div className="continue-card" onClick={() => setPage('quizzes')}>
                 <span className="continue-arrow">←</span>
                 <div>
-                  <div className="continue-type">الاختبار التالي</div>
+                  <div className="continue-type">{t.nextQuiz}</div>
                   <div className="continue-title">{nextQuiz.title}</div>
                 </div>
                 <span className="continue-icon">{nextQuiz.icon}</span>
@@ -1113,6 +1143,7 @@ function trackStat(type) {
 }
 
 function PricingPage({ user, onAuthClick, subscription, trial }) {
+  const { t } = useLang()
   const [loading, setLoading] = useState(null)
 
   async function handleCheckout(plan) {
@@ -1127,25 +1158,23 @@ function PricingPage({ user, onAuthClick, subscription, trial }) {
       const data = await res.json()
       if (data.url) window.location.href = data.url
       else throw new Error(data.error)
-    } catch { alert('حدث خطأ. حاول مرة أخرى.') }
+    } catch { alert(t.genericError) }
     finally { setLoading(null) }
   }
-
-  const isActive = subscription?.status === 'active' || trial?.active
 
   return (
     <div className="page pricing-page">
       <div className="page-header">
-        <h1>خطط الاشتراك</h1>
-        <p>اختر الخطة المناسبة لك وابدأ رحلتك في تعلم الإنجليزية</p>
+        <h1>{t.pricingTitle}</h1>
+        <p>{t.pricingSub}</p>
       </div>
 
       {trial?.active && (
         <div className="trial-banner">
           <span className="trial-icon">🎉</span>
           <div>
-            <strong>الفترة التجريبية المجانية</strong>
-            <p>متبقي {trial.daysLeft} {trial.daysLeft === 1 ? 'يوم' : 'أيام'} — استمتع بجميع الميزات مجاناً!</p>
+            <strong>{t.trialBanner}</strong>
+            <p>{t.trialDays(trial.daysLeft)}</p>
           </div>
         </div>
       )}
@@ -1154,58 +1183,58 @@ function PricingPage({ user, onAuthClick, subscription, trial }) {
         <div className="trial-banner" style={{ borderColor: 'var(--green)' }}>
           <span className="trial-icon">✅</span>
           <div>
-            <strong>اشتراكك فعّال</strong>
-            <p>لديك وصول كامل لجميع الميزات. شكراً لدعمك!</p>
+            <strong>{t.activeSub}</strong>
+            <p>{t.activeSubDesc}</p>
           </div>
         </div>
       )}
 
       <div className="pricing-cards">
         <div className="pricing-card">
-          <div className="pricing-badge">شهري</div>
+          <div className="pricing-badge">{t.monthly}</div>
           <div className="pricing-price">
             <span className="pricing-amount">$4.99</span>
-            <span className="pricing-period">/شهر</span>
+            <span className="pricing-period">{t.perMonth}</span>
           </div>
           <ul className="pricing-features">
-            <li>✓ جميع الدروس (A1-C2)</li>
-            <li>✓ جميع الاختبارات والمفردات</li>
-            <li>✓ المساعد الذكي AI غير محدود</li>
-            <li>✓ مساعد الكتابة AI</li>
-            <li>✓ مزامنة عبر الأجهزة</li>
-            <li>✓ نطق صوتي</li>
+            <li>✓ {t.feature1}</li>
+            <li>✓ {t.feature2}</li>
+            <li>✓ {t.feature3}</li>
+            <li>✓ {t.feature4}</li>
+            <li>✓ {t.feature5}</li>
+            <li>✓ {t.feature6}</li>
           </ul>
           <button className="btn-primary pricing-btn" onClick={() => handleCheckout('monthly')}
             disabled={loading || subscription?.status === 'active'}>
-            {loading === 'monthly' ? '...' : subscription?.status === 'active' ? 'مشترك ✓' : 'اشترك الآن'}
+            {loading === 'monthly' ? '...' : subscription?.status === 'active' ? t.subscribed : t.subscribeNow}
           </button>
         </div>
 
         <div className="pricing-card pricing-card-featured">
-          <div className="pricing-popular">الأفضل قيمة</div>
-          <div className="pricing-badge">سنوي</div>
+          <div className="pricing-popular">{t.bestValue}</div>
+          <div className="pricing-badge">{t.yearly}</div>
           <div className="pricing-price">
             <span className="pricing-amount">$39.99</span>
-            <span className="pricing-period">/سنة</span>
+            <span className="pricing-period">{t.perYear}</span>
           </div>
-          <div className="pricing-save">وفّر 33% — بدل $59.88</div>
+          <div className="pricing-save">{t.save33}</div>
           <ul className="pricing-features">
-            <li>✓ كل مميزات الخطة الشهرية</li>
-            <li>✓ توفير $19.89 سنوياً</li>
-            <li>✓ أولوية في الدعم</li>
+            <li>✓ {t.feature7}</li>
+            <li>✓ {t.feature8}</li>
+            <li>✓ {t.feature9}</li>
           </ul>
           <button className="btn-primary pricing-btn" onClick={() => handleCheckout('yearly')}
             disabled={loading || subscription?.status === 'active'}>
-            {loading === 'yearly' ? '...' : subscription?.status === 'active' ? 'مشترك ✓' : 'اشترك الآن'}
+            {loading === 'yearly' ? '...' : subscription?.status === 'active' ? t.subscribed : t.subscribeNow}
           </button>
         </div>
       </div>
 
       <div className="pricing-methods">
-        <p>طرق الدفع المتاحة</p>
+        <p>{t.paymentMethods}</p>
         <div className="payment-icons">
-          <span>💳 فيزا</span>
-          <span>💳 ماستركارد</span>
+          <span>💳 Visa</span>
+          <span>💳 Mastercard</span>
           <span>🍎 Apple Pay</span>
           <span>📱 Google Pay</span>
         </div>
@@ -1490,6 +1519,7 @@ function TermsOfService() {
 }
 
 function AITutor() {
+  const { t, lang } = useLang()
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -1514,16 +1544,14 @@ function AITutor() {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: newMessages.map(m => ({ role: m.role, content: m.content })) }),
+        body: JSON.stringify({ messages: newMessages.map(m => ({ role: m.role, content: m.content })), lang }),
       })
       if (!res.ok) throw new Error(`${res.status}`)
       const data = await res.json()
       setMessages(prev => [...prev, { role: 'assistant', content: data.text }])
       trackStat('chat')
-    } catch (err) {
-      const msg = err?.message || ''
-      if (msg.includes('429')) setError('تم تجاوز حد الاستخدام. حاول بعد قليل.')
-      else setError('خطأ في الاتصال. حاول مرة أخرى.')
+    } catch {
+      setError(t.connectionError)
     } finally {
       setLoading(false)
     }
@@ -1546,15 +1574,15 @@ function AITutor() {
     <div className="page ai-page">
       <div className="ai-header">
         <div>
-          <h1>🤖 المساعد الذكي</h1>
-          <p>اسألني أي سؤال عن الإنجليزية — سأشرح لك بالعربية والإنجليزية</p>
+          <h1>🤖 {t.aiTitle}</h1>
+          <p>{t.aiSub}</p>
         </div>
       </div>
 
       {messages.length === 0 && (
         <div className="ai-welcome">
           <div className="ai-welcome-icon">🤖</div>
-          <h3>مرحباً! أنا مساعدك الذكي لتعلم الإنجليزية</h3>
+          <h3>{t.aiWelcome}</h3>
           <p>يمكنني مساعدتك في قواعد اللغة، المفردات، النطق، وكل ما يخص تعلم الإنجليزية — بشرح عربي كامل.</p>
           <div className="quick-prompts">
             <p className="quick-prompts-label">أسئلة مقترحة:</p>
@@ -1890,7 +1918,16 @@ export default function App() {
   const [subscription, setSubscription] = useState(null)
   const [trial, setTrial] = useState({ active: false, daysLeft: 0 })
   const [installPrompt, setInstallPrompt] = useState(null)
+  const [lang, setLang] = useLocalStorage('em-lang', 'ar')
+  const t = getTranslation(lang)
   const syncTimer = useRef(null)
+
+  useEffect(() => {
+    const dir = LANGUAGES.find(l => l.code === lang)?.dir || 'rtl'
+    document.documentElement.dir = dir
+    document.documentElement.lang = lang
+    document.body.style.direction = dir
+  }, [lang])
 
   useEffect(() => {
     const handler = (e) => { e.preventDefault(); setInstallPrompt(e) }
@@ -1992,7 +2029,7 @@ export default function App() {
   if (authLoading) return <div className="auth-loading"><div className="auth-spinner" /></div>
 
   return (
-    <>
+    <LangContext.Provider value={{ t, lang, setLang }}>
       <Nav page={page} setPage={setPage} streak={streak} user={user} onAuthClick={() => setShowAuth(true)} onLogout={handleLogout} />
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} onSuccess={(u) => { setUser(u); setShowAuth(false); setTrial(getTrialStatus(u)) }} />}
       <main>
@@ -2009,24 +2046,24 @@ export default function App() {
       </main>
       {installPrompt && (
         <div className="pwa-banner">
-          <span>📲 ثبّت التطبيق على جهازك للوصول السريع</span>
+          <span>{t.installPrompt}</span>
           <button className="btn-primary" style={{ padding: '8px 20px', fontSize: '.9rem' }} onClick={() => {
             installPrompt.prompt()
             installPrompt.userChoice.then(() => setInstallPrompt(null))
-          }}>تثبيت</button>
+          }}>{t.install}</button>
           <button className="pwa-dismiss" onClick={() => setInstallPrompt(null)}>✕</button>
         </div>
       )}
       <footer className="footer">
-        <p>© ٢٠٢٥ EnglishMaster · منصة تعليمية للناطقين بالعربية</p>
+        <p>{t.footerText}</p>
         <div className="footer-links">
-          <button className="footer-link" onClick={() => setPage('privacy')}>سياسة الخصوصية</button>
+          <button className="footer-link" onClick={() => setPage('privacy')}>{t.privacy}</button>
           <span className="footer-sep">·</span>
-          <button className="footer-link" onClick={() => setPage('terms')}>شروط الاستخدام</button>
+          <button className="footer-link" onClick={() => setPage('terms')}>{t.terms}</button>
           <span className="footer-sep">·</span>
-          <button className="footer-link" onClick={() => setPage('admin')} style={{ opacity: 0.4, fontSize: '.75rem' }}>إدارة</button>
+          <button className="footer-link" onClick={() => setPage('admin')} style={{ opacity: 0.4, fontSize: '.75rem' }}>{t.admin}</button>
         </div>
       </footer>
-    </>
+    </LangContext.Provider>
   )
 }

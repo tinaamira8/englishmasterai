@@ -2,21 +2,29 @@ import Anthropic from '@anthropic-ai/sdk'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_KEY })
 
-const AI_SYSTEM = `You are an expert English language tutor for Arabic speakers. Help Arabic-speaking learners improve their English.
+const LANG_NAMES = {
+  ar: 'Arabic', tr: 'Turkish', fr: 'French', es: 'Spanish',
+  ur: 'Urdu', fa: 'Persian', pt: 'Portuguese', hi: 'Hindi',
+}
+
+function getSystemPrompt(lang) {
+  const name = LANG_NAMES[lang] || 'Arabic'
+  return `You are an expert English language tutor for ${name} speakers. Help learners improve their English.
 
 Rules:
-- Always respond in BOTH English AND Arabic
+- Always respond in BOTH English AND ${name}
 - Keep English explanations clear and simple
-- Provide Arabic translations and explanations
+- Provide ${name} translations and explanations
 - Be encouraging and patient
 - Correct mistakes gently with explanations
 - Give examples in context
 
 Format:
 **English:** [explanation/answer]
-**بالعربية:** [Arabic translation/explanation]
+**${name}:** [${name} translation/explanation]
 
 Be supportive. Your goal is to build confidence in English.`
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
@@ -25,7 +33,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
 
   try {
-    const { messages } = req.body
+    const { messages, lang } = req.body
     if (!messages || !Array.isArray(messages)) {
       return res.status(400).json({ error: 'Invalid request' })
     }
@@ -33,7 +41,7 @@ export default async function handler(req, res) {
     const response = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 1024,
-      system: AI_SYSTEM,
+      system: getSystemPrompt(lang || 'ar'),
       messages,
     })
 

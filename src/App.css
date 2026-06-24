@@ -1392,3 +1392,14 @@ main {
 /* ── Theme Toggle ────────────────────────────────────────────────────────── */
 .theme-toggle { background:none; border:none; font-size:1.2rem; cursor:pointer; padding:4px 6px; border-radius:8px; transition:background .15s; }
 .theme-toggle:hover { background:var(--accent-light); }
+
+/* ── Language Selector ───────────────────────────────────────────────────── */
+.lang-selector { position:relative; }
+.lang-btn { background:none; border:1px solid var(--border); border-radius:8px; padding:4px 10px; cursor:pointer; font-size:.9rem; display:flex; align-items:center; gap:4px; color:var(--text); }
+.lang-btn:hover { background:var(--accent-light); }
+.lang-code { font-size:.75rem; font-weight:600; }
+.lang-dropdown { position:absolute; top:100%; left:0; right:auto; background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow-hover); z-index:300; min-width:160px; padding:6px; margin-top:4px; }
+:root[dir="rtl"] .lang-dropdown { left:auto; right:0; }
+.lang-option { display:flex; align-items:center; gap:8px; width:100%; background:none; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-size:.9rem; color:var(--text); text-align:start; }
+.lang-option:hover { background:var(--accent-light); }
+.lang-option.active { background:var(--accent-light); color:var(--accent); font-weight:600; }

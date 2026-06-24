@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import './App.css'
+import { auth, db, googleProvider, saveProgress, loadProgress, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, signInWithPopup, sendPasswordResetEmail, updateProfile } from './firebase.js'
 
 // ── Levels ────────────────────────────────────────────────────────────────────
 const LEVELS = [
@@ -468,7 +469,7 @@ function useLocalStorage(key, initial) {
 }
 
 // ── Nav ───────────────────────────────────────────────────────────────────────
-function Nav({ page, setPage, streak }) {
+function Nav({ page, setPage, streak, user, onAuthClick, onLogout }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const links = [
     { id: 'home', label: 'الرئيسية' },
@@ -478,6 +479,7 @@ function Nav({ page, setPage, streak }) {
     { id: 'ai', label: '🤖 مساعد ذكي' },
     { id: 'writing', label: '✍️ الكتابة' },
   ]
+  const initials = user?.displayName ? user.displayName.slice(0, 2).toUpperCase() : user?.email?.slice(0, 2).toUpperCase()
   return (
     <nav className="nav">
       <button className="menu-toggle" onClick={() => setMenuOpen(v => !v)} aria-label="قائمة">
@@ -495,8 +497,114 @@ function Nav({ page, setPage, streak }) {
       </button>
       <div className="nav-right">
         <span className="streak-badge" title="أيام متتالية">🔥 {streak}</span>
+        {user ? (
+          <div className="nav-user">
+            <div className="nav-avatar" title={user.displayName || user.email}>{initials}</div>
+            <button className="nav-logout" onClick={onLogout} title="تسجيل خروج">خروج</button>
+          </div>
+        ) : (
+          <button className="nav-login-btn" onClick={onAuthClick}>دخول</button>
+        )}
       </div>
     </nav>
+  )
+}
+
+function AuthModal({ onClose, onSuccess }) {
+  const [mode, setMode] = useState('login') // login | register | reset
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [resetSent, setResetSent] = useState(false)
+
+  function errMsg(code) {
+    if (code === 'auth/email-already-in-use') return 'هذا الإيميل مستخدم بالفعل'
+    if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') return 'الإيميل أو كلمة المرور غير صحيحة'
+    if (code === 'auth/user-not-found') return 'لا يوجد حساب بهذا الإيميل'
+    if (code === 'auth/weak-password') return 'كلمة المرور قصيرة جداً (6 أحرف على الأقل)'
+    if (code === 'auth/invalid-email') return 'صيغة الإيميل غير صحيحة'
+    if (code === 'auth/popup-closed-by-user') return ''
+    return 'حدث خطأ، حاول مرة أخرى'
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    setError(''); setLoading(true)
+    try {
+      if (mode === 'register') {
+        const cred = await createUserWithEmailAndPassword(auth, email, password)
+        if (name.trim()) await updateProfile(cred.user, { displayName: name.trim() })
+        onSuccess(cred.user)
+      } else {
+        const cred = await signInWithEmailAndPassword(auth, email, password)
+        onSuccess(cred.user)
+      }
+    } catch (err) {
+      setError(errMsg(err.code))
+    } finally { setLoading(false) }
+  }
+
+  async function handleGoogle() {
+    setError(''); setLoading(true)
+    try {
+      const cred = await signInWithPopup(auth, googleProvider)
+      onSuccess(cred.user)
+    } catch (err) { setError(errMsg(err.code)) } finally { setLoading(false) }
+  }
+
+  async function handleReset() {
+    if (!email) { setError('أدخل الإيميل أولاً'); return }
+    setLoading(true)
+    try {
+      await sendPasswordResetEmail(auth, email)
+      setResetSent(true); setError('')
+    } catch (err) { setError(errMsg(err.code)) } finally { setLoading(false) }
+  }
+
+  return (
+    <div className="auth-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="auth-modal">
+        <button className="auth-close" onClick={onClose}>✕</button>
+        <div className="auth-logo">🇬🇧</div>
+        <h2>{mode === 'login' ? 'تسجيل الدخول' : mode === 'register' ? 'إنشاء حساب' : 'استعادة كلمة المرور'}</h2>
+        <p className="auth-sub">{mode === 'login' ? 'أهلاً بعودتك!' : mode === 'register' ? 'انضم وابدأ رحلتك مع الإنجليزية' : 'سنرسل لك رابط الاستعادة'}</p>
+
+        {mode !== 'reset' && (
+          <button className="auth-google-btn" onClick={handleGoogle} disabled={loading}>
+            <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.2l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.9 6.1C12.4 13.3 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.2-.4-4.7H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 6.1-10 6.1-17.3z"/><path fill="#FBBC05" d="M10.5 28.6A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.1.7-4.6l-7.9-6.1A23.9 23.9 0 0 0 0 24c0 3.9.9 7.6 2.6 10.8l7.9-6.2z"/><path fill="#34A853" d="M24 48c6.3 0 11.7-2.1 15.6-5.7l-7.5-5.8c-2.1 1.4-4.8 2.3-8.1 2.3-6.3 0-11.6-3.8-13.5-9.2l-7.9 6.2C6.6 42.6 14.6 48 24 48z"/></svg>
+            المتابعة بـ Google
+          </button>
+        )}
+
+        {mode !== 'reset' && <div className="auth-divider"><span>أو</span></div>}
+
+        <form onSubmit={handleSubmit}>
+          {mode === 'register' && (
+            <input className="auth-input" type="text" placeholder="الاسم (اختياري)" value={name} onChange={e => setName(e.target.value)} dir="rtl" />
+          )}
+          <input className="auth-input" type="email" placeholder="البريد الإلكتروني" value={email} onChange={e => setEmail(e.target.value)} required dir="ltr" />
+          {mode !== 'reset' && (
+            <input className="auth-input" type="password" placeholder="كلمة المرور" value={password} onChange={e => setPassword(e.target.value)} required dir="ltr" minLength={6} />
+          )}
+          {error && <div className="ai-error">{error}</div>}
+          {resetSent && <div className="auth-success">تم إرسال رابط الاستعادة إلى بريدك ✓</div>}
+          {mode === 'reset' ? (
+            <button type="button" className="btn-primary auth-submit" onClick={handleReset} disabled={loading}>{loading ? '...' : 'إرسال رابط الاستعادة'}</button>
+          ) : (
+            <button type="submit" className="btn-primary auth-submit" disabled={loading}>{loading ? '...' : mode === 'login' ? 'دخول' : 'إنشاء الحساب'}</button>
+          )}
+        </form>
+
+        <div className="auth-switch">
+          {mode === 'login' && (<>ليس لديك حساب؟ <button onClick={() => { setMode('register'); setError('') }}>أنشئ حساباً</button></>)}
+          {mode === 'register' && (<>لديك حساب؟ <button onClick={() => { setMode('login'); setError('') }}>سجّل دخولك</button></>)}
+          {mode !== 'reset' && <> · <button onClick={() => { setMode('reset'); setError('') }}>نسيت كلمة المرور؟</button></>}
+          {mode === 'reset' && <button onClick={() => { setMode('login'); setError('') }}>عودة لتسجيل الدخول</button>}
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -1630,6 +1738,10 @@ export default function App() {
   const [page, setPage] = useState('home')
   const [progress, setProgress] = useLocalStorage('em-progress', { lessons: {}, quizzes: {}, vocab: [] })
   const [streak, setStreak] = useLocalStorage('em-streak', 0)
+  const [user, setUser] = useState(null)
+  const [authLoading, setAuthLoading] = useState(true)
+  const [showAuth, setShowAuth] = useState(false)
+  const syncTimer = useRef(null)
 
   useEffect(() => {
     const today = new Date().toDateString()
@@ -1640,6 +1752,37 @@ export default function App() {
     }
   }, [])
 
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async (u) => {
+      setUser(u)
+      setAuthLoading(false)
+      if (u) {
+        try {
+          const data = await loadProgress(u.uid)
+          if (data?.progress) setProgress(data.progress)
+          if (data?.streak) setStreak(data.streak)
+        } catch {}
+      }
+    })
+    return unsub
+  }, [])
+
+  const syncToCloud = useCallback((prog, str, uid) => {
+    if (!uid) return
+    clearTimeout(syncTimer.current)
+    syncTimer.current = setTimeout(() => {
+      saveProgress(uid, prog, str).catch(() => {})
+    }, 1500)
+  }, [])
+
+  function completeLesson(id) {
+    setProgress(p => {
+      const next = { ...p, lessons: { ...p.lessons, [id]: true } }
+      syncToCloud(next, streak, user?.uid)
+      return next
+    })
+  }
+
   function completeLesson(id) {
     setProgress(p => ({ ...p, lessons: { ...p.lessons, [id]: true } }))
   }
@@ -1647,20 +1790,32 @@ export default function App() {
   function finishQuiz(id, score) {
     setProgress(p => {
       const prev = p.quizzes?.[id]
-      return { ...p, quizzes: { ...p.quizzes, [id]: prev === undefined ? score : Math.max(prev, score) } }
+      const next = { ...p, quizzes: { ...p.quizzes, [id]: prev === undefined ? score : Math.max(prev, score) } }
+      syncToCloud(next, streak, user?.uid)
+      return next
     })
   }
 
   function learnWord(id) {
     setProgress(p => {
       const vocab = p.vocab || []
-      return { ...p, vocab: vocab.includes(id) ? vocab.filter(v => v !== id) : [...vocab, id] }
+      const next = { ...p, vocab: vocab.includes(id) ? vocab.filter(v => v !== id) : [...vocab, id] }
+      syncToCloud(next, streak, user?.uid)
+      return next
     })
   }
 
+  async function handleLogout() {
+    await signOut(auth)
+    setUser(null)
+  }
+
+  if (authLoading) return <div className="auth-loading"><div className="auth-spinner" /></div>
+
   return (
     <>
-      <Nav page={page} setPage={setPage} streak={streak} />
+      <Nav page={page} setPage={setPage} streak={streak} user={user} onAuthClick={() => setShowAuth(true)} onLogout={handleLogout} />
+      {showAuth && <AuthModal onClose={() => setShowAuth(false)} onSuccess={(u) => { setUser(u); setShowAuth(false) }} />}
       <main>
         {page === 'home' && <Home progress={progress} setPage={setPage} />}
         {page === 'lessons' && <Lessons progress={progress} onComplete={completeLesson} />}

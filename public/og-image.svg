@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1d27"/>
+      <stop offset="50%" style="stop-color:#2d1f5e"/>
+      <stop offset="100%" style="stop-color:#1a1d27"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <text x="600" y="200" text-anchor="middle" font-family="system-ui,sans-serif" font-size="72" font-weight="700" fill="white">English<tspan fill="#a78bfa">Master</tspan> AI</text>
+  <text x="600" y="280" text-anchor="middle" font-family="system-ui,sans-serif" font-size="36" fill="#c9d1d9">تعلّم الإنجليزية بالذكاء الاصطناعي</text>
+  <text x="600" y="370" text-anchor="middle" font-family="system-ui,sans-serif" font-size="24" fill="#8b949e">دروس تفاعلية · اختبارات · مفردات · مساعد ذكي</text>
+  <text x="600" y="430" text-anchor="middle" font-family="system-ui,sans-serif" font-size="20" fill="#6d28d9">englishmasterai.com</text>
+</svg>

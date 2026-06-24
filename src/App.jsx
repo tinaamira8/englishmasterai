@@ -469,6 +469,23 @@ function useLocalStorage(key, initial) {
 }
 
 // ── Nav ───────────────────────────────────────────────────────────────────────
+function ThemeToggle() {
+  const [dark, setDark] = useState(() => {
+    const saved = localStorage.getItem('em-theme')
+    if (saved) return saved === 'dark'
+    return window.matchMedia('(prefers-color-scheme: dark)').matches
+  })
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light')
+    localStorage.setItem('em-theme', dark ? 'dark' : 'light')
+  }, [dark])
+  return (
+    <button className="theme-toggle" onClick={() => setDark(d => !d)} title={dark ? 'الوضع الفاتح' : 'الوضع الداكن'}>
+      {dark ? '☀️' : '🌙'}
+    </button>
+  )
+}
+
 function Nav({ page, setPage, streak, user, onAuthClick, onLogout }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const links = [
@@ -497,6 +514,7 @@ function Nav({ page, setPage, streak, user, onAuthClick, onLogout }) {
         <span className="nav-logo">🇬🇧</span>
       </button>
       <div className="nav-right">
+        <ThemeToggle />
         <span className="streak-badge" title="أيام متتالية">🔥 {streak}</span>
         {user ? (
           <div className="nav-user">
@@ -646,6 +664,31 @@ function Home({ progress, setPage }) {
           </div>
         ))}
       </div>
+
+      {(() => {
+        const completedLessons = Object.keys(progress.lessons || {})
+        const badges = LEVELS.map(lvl => {
+          const levelLessons = LESSONS.filter(l => l.level === lvl.id)
+          const done = levelLessons.filter(l => completedLessons.includes(String(l.id)))
+          return { ...lvl, total: levelLessons.length, done: done.length, unlocked: done.length === levelLessons.length && levelLessons.length > 0 }
+        })
+        const anyUnlocked = badges.some(b => b.unlocked)
+        return anyUnlocked ? (
+          <div className="achievements-section">
+            <h2>إنجازاتك</h2>
+            <div className="badges-row">
+              {badges.map(b => (
+                <div key={b.id} className={`achievement-badge ${b.unlocked ? 'unlocked' : 'locked'}`}>
+                  <span className="badge-icon">{b.unlocked ? '🏆' : '🔒'}</span>
+                  <span className="badge-level">{b.id}</span>
+                  <span className="badge-label">{b.label}</span>
+                  <span className="badge-progress">{b.done}/{b.total}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null
+      })()}
 
       {(nextLesson || nextQuiz) && (
         <div className="continue-section">
@@ -1846,7 +1889,14 @@ export default function App() {
   const [showAuth, setShowAuth] = useState(false)
   const [subscription, setSubscription] = useState(null)
   const [trial, setTrial] = useState({ active: false, daysLeft: 0 })
+  const [installPrompt, setInstallPrompt] = useState(null)
   const syncTimer = useRef(null)
+
+  useEffect(() => {
+    const handler = (e) => { e.preventDefault(); setInstallPrompt(e) }
+    window.addEventListener('beforeinstallprompt', handler)
+    return () => window.removeEventListener('beforeinstallprompt', handler)
+  }, [])
 
   useEffect(() => {
     const today = new Date().toDateString()
@@ -1957,6 +2007,16 @@ export default function App() {
         {page === 'terms' && <TermsOfService />}
         {page === 'admin' && <AdminDashboard />}
       </main>
+      {installPrompt && (
+        <div className="pwa-banner">
+          <span>📲 ثبّت التطبيق على جهازك للوصول السريع</span>
+          <button className="btn-primary" style={{ padding: '8px 20px', fontSize: '.9rem' }} onClick={() => {
+            installPrompt.prompt()
+            installPrompt.userChoice.then(() => setInstallPrompt(null))
+          }}>تثبيت</button>
+          <button className="pwa-dismiss" onClick={() => setInstallPrompt(null)}>✕</button>
+        </div>
+      )}
       <footer className="footer">
         <p>© ٢٠٢٥ EnglishMaster · منصة تعليمية للناطقين بالعربية</p>
         <div className="footer-links">

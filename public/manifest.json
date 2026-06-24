@@ -1,0 +1,15 @@
+{
+  "name": "EnglishMaster AI — تعلّم الإنجليزية",
+  "short_name": "EnglishMaster",
+  "description": "Learn English from beginner to advanced with AI-powered lessons, quizzes, and tutoring — all in Arabic.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f1117",
+  "theme_color": "#6d28d9",
+  "orientation": "any",
+  "dir": "rtl",
+  "lang": "ar",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

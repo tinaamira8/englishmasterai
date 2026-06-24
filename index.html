@@ -33,6 +33,7 @@
     <meta name="apple-mobile-web-app-title" content="EnglishMaster" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.json" />
 
     <!-- Structured Data -->
     <script type="application/ld+json">
@@ -61,5 +62,6 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js')</script>
   </body>
 </html>

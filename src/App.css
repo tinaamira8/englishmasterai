@@ -34,7 +34,7 @@ html, body { direction: rtl; }
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #0f1117;
     --surface: #1a1d27;
     --border: #2a2d3a;
@@ -52,6 +52,25 @@ html, body { direction: rtl; }
     --shadow: 0 1px 3px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.2);
     --shadow-hover: 0 4px 12px rgba(0,0,0,.4), 0 8px 32px rgba(0,0,0,.3);
   }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --border: #2a2d3a;
+  --text: #c9d1d9;
+  --text-secondary: #8b949e;
+  --heading: #e6edf3;
+  --accent: #a78bfa;
+  --accent-light: #2d1f5e;
+  --accent-hover: #8b5cf6;
+  --green-light: #052e16;
+  --blue-light: #1e3a5f;
+  --purple-light: #2d1f5e;
+  --red-light: #450a0a;
+  --yellow-light: #451a03;
+  --shadow: 0 1px 3px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.2);
+  --shadow-hover: 0 4px 12px rgba(0,0,0,.4), 0 8px 32px rgba(0,0,0,.3);
 }
 
 body { margin: 0; }
@@ -1352,3 +1371,24 @@ main {
 .pricing-methods { text-align:center; color:var(--text-secondary); font-size:.9rem; }
 .pricing-methods p { margin:0 0 10px; }
 .payment-icons { display:flex; gap:16px; justify-content:center; flex-wrap:wrap; font-size:.85rem; }
+
+/* ── PWA Install Banner ──────────────────────────────────────────────────── */
+.pwa-banner { position:fixed; bottom:0; left:0; right:0; background:var(--surface); border-top:1px solid var(--border); padding:14px 24px; display:flex; align-items:center; gap:12px; z-index:200; box-shadow:0 -2px 12px rgba(0,0,0,.15); }
+.pwa-banner span { flex:1; font-size:.95rem; font-weight:500; }
+.pwa-dismiss { background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--text-secondary); padding:4px 8px; }
+
+/* ── Achievements ────────────────────────────────────────────────────────── */
+.achievements-section { margin-bottom:40px; }
+.achievements-section h2 { font-size:1.4rem; color:var(--heading); margin:0 0 16px; }
+.badges-row { display:flex; gap:12px; flex-wrap:wrap; }
+.achievement-badge { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; text-align:center; min-width:100px; flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; }
+.achievement-badge.unlocked { border-color:var(--accent); background:var(--accent-light); }
+.achievement-badge.locked { opacity:.5; }
+.badge-icon { font-size:1.8rem; }
+.badge-level { font-size:1.1rem; font-weight:700; color:var(--heading); }
+.badge-label { font-size:.8rem; color:var(--text-secondary); }
+.badge-progress { font-size:.75rem; color:var(--text-secondary); }
+
+/* ── Theme Toggle ────────────────────────────────────────────────────────── */
+.theme-toggle { background:none; border:none; font-size:1.2rem; cursor:pointer; padding:4px 6px; border-radius:8px; transition:background .15s; }
+.theme-toggle:hover { background:var(--accent-light); }

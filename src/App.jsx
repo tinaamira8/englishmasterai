@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, createContext, useContext } from 'react'
 import './App.css'
-import { auth, db, googleProvider, saveProgress, loadProgress, saveSubscription, getSubscription, getTrialStatus, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, signInWithPopup, sendPasswordResetEmail, updateProfile } from './firebase.js'
+import { auth, db, googleProvider, saveProgress, loadProgress, saveSubscription, getSubscription, getTrialStatus, getLeaderboard, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, signInWithPopup, sendPasswordResetEmail, updateProfile } from './firebase.js'
 import { LANGUAGES, getTranslation } from './translations.js'
 
 const LangContext = createContext({ t: getTranslation('ar'), lang: 'ar', setLang: () => {} })
@@ -524,6 +524,7 @@ function Nav({ page, setPage, streak, user, onAuthClick, onLogout }) {
     { id: 'ai', label: t.aiTutor },
     { id: 'writing', label: t.writing },
     { id: 'pricing', label: t.pricing },
+    { id: 'leaderboard', label: '🏆' },
   ]
   const initials = user?.displayName ? user.displayName.slice(0, 2).toUpperCase() : user?.email?.slice(0, 2).toUpperCase()
   return (
@@ -1305,6 +1306,41 @@ function PricingPage({ user, onAuthClick, subscription, trial }) {
   )
 }
 
+function Leaderboard({ currentUid }) {
+  const { t } = useLang()
+  const [board, setBoard] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    getLeaderboard().then(setBoard).catch(() => {}).finally(() => setLoading(false))
+  }, [])
+
+  const medals = ['🥇', '🥈', '🥉']
+
+  return (
+    <div className="page leaderboard-page">
+      <div className="page-header">
+        <h1>🏆 Leaderboard</h1>
+        <p>Top learners on EnglishMaster</p>
+      </div>
+      {loading ? <div className="loading-spinner">...</div> : board.length === 0 ? (
+        <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No scores yet. Complete lessons to appear here!</p>
+      ) : (
+        <div className="leaderboard-list">
+          {board.map((entry, i) => (
+            <div key={entry.uid} className={`lb-row ${entry.uid === currentUid ? 'lb-me' : ''}`}>
+              <span className="lb-rank">{medals[i] || `#${i + 1}`}</span>
+              <span className="lb-name">{entry.displayName || 'Learner'}</span>
+              <span className="lb-stats">📚{entry.lessonsCount} · 📝{entry.vocabCount} · 🔥{entry.streak || 0}</span>
+              <span className="lb-score">{entry.score} pts</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function AdminDashboard() {
   const [authed, setAuthed] = useState(false)
   const [password, setPassword] = useState('')
@@ -2039,9 +2075,9 @@ export default function App() {
     if (!uid) return
     clearTimeout(syncTimer.current)
     syncTimer.current = setTimeout(() => {
-      saveProgress(uid, prog, str).catch(() => {})
+      saveProgress(uid, prog, str, user?.displayName).catch(() => {})
     }, 1500)
-  }, [])
+  }, [user])
 
   function completeLesson(id) {
     setProgress(p => {
@@ -2102,6 +2138,7 @@ export default function App() {
         {page === 'ai' && gatedPage(<AITutor />)}
         {page === 'writing' && gatedPage(<WritingAssistant />)}
         {page === 'pricing' && <PricingPage user={user} onAuthClick={() => setShowAuth(true)} subscription={subscription} trial={trial} />}
+        {page === 'leaderboard' && <Leaderboard currentUid={user?.uid} />}
         {page === 'privacy' && <PrivacyPolicy />}
         {page === 'terms' && <TermsOfService />}
         {page === 'admin' && <AdminDashboard />}

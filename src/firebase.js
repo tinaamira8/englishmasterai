@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail, updateProfile } from 'firebase/auth'
-import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore'
+import { getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs } from 'firebase/firestore'
 
 const firebaseConfig = {
   apiKey: "AIzaSyAIrIUuz5EbFGVxcPJw1siUZuoqaj9hrzE",
@@ -16,8 +16,21 @@ export const auth = getAuth(app)
 export const db = getFirestore(app)
 export const googleProvider = new GoogleAuthProvider()
 
-export async function saveProgress(uid, progress, streak) {
-  await setDoc(doc(db, 'users', uid), { progress, streak, updatedAt: Date.now() }, { merge: true })
+export async function saveProgress(uid, progress, streak, displayName) {
+  const lessonsCount = Object.keys(progress.lessons || {}).filter(k => progress.lessons[k]).length
+  const vocabCount = (progress.vocab || []).length
+  const quizzesCount = Object.keys(progress.quizzes || {}).length
+  const score = lessonsCount * 10 + quizzesCount * 5 + vocabCount
+  await setDoc(doc(db, 'users', uid), {
+    progress, streak, updatedAt: Date.now(),
+    leaderboard: { score, lessonsCount, vocabCount, quizzesCount, displayName: displayName || 'Learner', streak }
+  }, { merge: true })
+}
+
+export async function getLeaderboard() {
+  const q = query(collection(db, 'users'), orderBy('leaderboard.score', 'desc'), limit(20))
+  const snap = await getDocs(q)
+  return snap.docs.map(d => ({ uid: d.id, ...d.data().leaderboard })).filter(e => e.score > 0)
 }
 
 export async function loadProgress(uid) {

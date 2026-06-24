@@ -1307,9 +1307,8 @@ function PricingPage({ user, onAuthClick, subscription, trial }) {
             <li>✓ Priority support</li>
             <li>✓ Never pay again</li>
           </ul>
-          <button className="btn-lifetime pricing-btn" onClick={() => handleCheckout('lifetime')}
-            disabled={loading || subscription?.status === 'active'}>
-            {loading === 'lifetime' ? '...' : subscription?.status === 'active' ? t.subscribed : 'Get Lifetime Access'}
+          <button className="btn-lifetime pricing-btn" onClick={() => window.open('https://tinaamira.gumroad.com/l/xennme', '_blank')}>
+            Get Lifetime Access
           </button>
         </div>
       </div>

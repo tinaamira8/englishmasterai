@@ -695,6 +695,14 @@ function Home({ progress, setPage }) {
         ))}
       </div>
 
+      {completedLessons > 0 && (
+        <button className="share-btn" onClick={() => {
+          const text = `I'm learning English on EnglishMaster AI! ${completedLessons} lessons completed 📚\nhttps://englishmasterai.com`
+          if (navigator.share) navigator.share({ text }).catch(() => {})
+          else navigator.clipboard.writeText(text).then(() => alert('Copied to clipboard!'))
+        }}>📤 Share Progress</button>
+      )}
+
       {(() => {
         const completedLessons = Object.keys(progress.lessons || {})
         const badges = LEVELS.map(lvl => {
@@ -718,6 +726,60 @@ function Home({ progress, setPage }) {
             </div>
           </div>
         ) : null
+      })()}
+
+      {(() => {
+        const CERT_LEVELS = { A1: 3, A2: 3, B1: 4, B2: 2, C1: 2, C2: 2 }
+        const completedCerts = Object.entries(CERT_LEVELS).filter(([lvl, total]) => {
+          const done = LESSONS.filter(l => l.level === lvl && progress.lessons?.[l.id]).length
+          return done >= total
+        }).map(([lvl]) => lvl)
+        if (completedCerts.length === 0) return null
+
+        function downloadCert(level) {
+          const c = document.createElement('canvas')
+          c.width = 800; c.height = 560
+          const ctx = c.getContext('2d')
+          ctx.fillStyle = '#f8f6ff'; ctx.fillRect(0, 0, 800, 560)
+          ctx.strokeStyle = '#6d28d9'; ctx.lineWidth = 6
+          ctx.strokeRect(20, 20, 760, 520)
+          ctx.strokeStyle = '#a78bfa'; ctx.lineWidth = 2
+          ctx.strokeRect(30, 30, 740, 500)
+          ctx.fillStyle = '#6d28d9'; ctx.font = 'bold 28px serif'
+          ctx.textAlign = 'center'
+          ctx.fillText('EnglishMaster AI', 400, 80)
+          ctx.fillStyle = '#1e1b4b'; ctx.font = '18px sans-serif'
+          ctx.fillText('Certificate of Achievement', 400, 120)
+          ctx.fillStyle = '#6d28d9'; ctx.font = 'bold 60px serif'
+          ctx.fillText(level, 400, 220)
+          ctx.fillStyle = '#4c1d95'; ctx.font = '20px sans-serif'
+          const levelNames = { A1: 'Beginner', A2: 'Elementary', B1: 'Intermediate', B2: 'Upper Intermediate', C1: 'Advanced', C2: 'Proficient' }
+          ctx.fillText(levelNames[level], 400, 260)
+          ctx.fillStyle = '#374151'; ctx.font = '16px sans-serif'
+          ctx.fillText(`Completed all ${CERT_LEVELS[level]} lessons at level ${level}`, 400, 320)
+          ctx.fillText(`Date: ${new Date().toLocaleDateString()}`, 400, 360)
+          ctx.fillStyle = '#9ca3af'; ctx.font = '13px sans-serif'
+          ctx.fillText('englishmasterai.com', 400, 500)
+          const link = document.createElement('a')
+          link.download = `EnglishMaster-${level}-Certificate.png`
+          link.href = c.toDataURL('image/png')
+          link.click()
+        }
+
+        return (
+          <div className="certificates-section">
+            <h2>🎓 {t.achievements}</h2>
+            <div className="cert-grid">
+              {completedCerts.map(lvl => (
+                <button key={lvl} className="cert-card" onClick={() => downloadCert(lvl)}>
+                  <span className="cert-icon">🎓</span>
+                  <span className="cert-level">{lvl}</span>
+                  <span className="cert-download">⬇ Download</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )
       })()}
 
       {(nextLesson || nextQuiz) && (

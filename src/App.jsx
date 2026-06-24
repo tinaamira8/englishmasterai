@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import './App.css'
-import { auth, db, googleProvider, saveProgress, loadProgress, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, signInWithPopup, sendPasswordResetEmail, updateProfile } from './firebase.js'
+import { auth, db, googleProvider, saveProgress, loadProgress, saveSubscription, getSubscription, getTrialStatus, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, signInWithPopup, sendPasswordResetEmail, updateProfile } from './firebase.js'
 
 // ── Levels ────────────────────────────────────────────────────────────────────
 const LEVELS = [
@@ -478,6 +478,7 @@ function Nav({ page, setPage, streak, user, onAuthClick, onLogout }) {
     { id: 'vocabulary', label: 'المفردات' },
     { id: 'ai', label: '🤖 مساعد ذكي' },
     { id: 'writing', label: '✍️ الكتابة' },
+    { id: 'pricing', label: '💎 الأسعار' },
   ]
   const initials = user?.displayName ? user.displayName.slice(0, 2).toUpperCase() : user?.email?.slice(0, 2).toUpperCase()
   return (
@@ -1066,6 +1067,108 @@ function trackStat(type) {
   s[type] = (s[type] || 0) + 1
   s.daily[today] = (s.daily[today] || 0) + 1
   localStorage.setItem('em-admin-stats', JSON.stringify(s))
+}
+
+function PricingPage({ user, onAuthClick, subscription, trial }) {
+  const [loading, setLoading] = useState(null)
+
+  async function handleCheckout(plan) {
+    if (!user) { onAuthClick(); return }
+    setLoading(plan)
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid: user.uid, email: user.email, plan }),
+      })
+      const data = await res.json()
+      if (data.url) window.location.href = data.url
+      else throw new Error(data.error)
+    } catch { alert('حدث خطأ. حاول مرة أخرى.') }
+    finally { setLoading(null) }
+  }
+
+  const isActive = subscription?.status === 'active' || trial?.active
+
+  return (
+    <div className="page pricing-page">
+      <div className="page-header">
+        <h1>خطط الاشتراك</h1>
+        <p>اختر الخطة المناسبة لك وابدأ رحلتك في تعلم الإنجليزية</p>
+      </div>
+
+      {trial?.active && (
+        <div className="trial-banner">
+          <span className="trial-icon">🎉</span>
+          <div>
+            <strong>الفترة التجريبية المجانية</strong>
+            <p>متبقي {trial.daysLeft} {trial.daysLeft === 1 ? 'يوم' : 'أيام'} — استمتع بجميع الميزات مجاناً!</p>
+          </div>
+        </div>
+      )}
+
+      {subscription?.status === 'active' && (
+        <div className="trial-banner" style={{ borderColor: 'var(--green)' }}>
+          <span className="trial-icon">✅</span>
+          <div>
+            <strong>اشتراكك فعّال</strong>
+            <p>لديك وصول كامل لجميع الميزات. شكراً لدعمك!</p>
+          </div>
+        </div>
+      )}
+
+      <div className="pricing-cards">
+        <div className="pricing-card">
+          <div className="pricing-badge">شهري</div>
+          <div className="pricing-price">
+            <span className="pricing-amount">$4.99</span>
+            <span className="pricing-period">/شهر</span>
+          </div>
+          <ul className="pricing-features">
+            <li>✓ جميع الدروس (A1-C2)</li>
+            <li>✓ جميع الاختبارات والمفردات</li>
+            <li>✓ المساعد الذكي AI غير محدود</li>
+            <li>✓ مساعد الكتابة AI</li>
+            <li>✓ مزامنة عبر الأجهزة</li>
+            <li>✓ نطق صوتي</li>
+          </ul>
+          <button className="btn-primary pricing-btn" onClick={() => handleCheckout('monthly')}
+            disabled={loading || subscription?.status === 'active'}>
+            {loading === 'monthly' ? '...' : subscription?.status === 'active' ? 'مشترك ✓' : 'اشترك الآن'}
+          </button>
+        </div>
+
+        <div className="pricing-card pricing-card-featured">
+          <div className="pricing-popular">الأفضل قيمة</div>
+          <div className="pricing-badge">سنوي</div>
+          <div className="pricing-price">
+            <span className="pricing-amount">$39.99</span>
+            <span className="pricing-period">/سنة</span>
+          </div>
+          <div className="pricing-save">وفّر 33% — بدل $59.88</div>
+          <ul className="pricing-features">
+            <li>✓ كل مميزات الخطة الشهرية</li>
+            <li>✓ توفير $19.89 سنوياً</li>
+            <li>✓ أولوية في الدعم</li>
+          </ul>
+          <button className="btn-primary pricing-btn" onClick={() => handleCheckout('yearly')}
+            disabled={loading || subscription?.status === 'active'}>
+            {loading === 'yearly' ? '...' : subscription?.status === 'active' ? 'مشترك ✓' : 'اشترك الآن'}
+          </button>
+        </div>
+      </div>
+
+      <div className="pricing-methods">
+        <p>طرق الدفع المتاحة</p>
+        <div className="payment-icons">
+          <span>💳 فيزا</span>
+          <span>💳 ماستركارد</span>
+          <span>🍎 Apple Pay</span>
+          <span>📱 Google Pay</span>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function AdminDashboard() {
@@ -1741,6 +1844,8 @@ export default function App() {
   const [user, setUser] = useState(null)
   const [authLoading, setAuthLoading] = useState(true)
   const [showAuth, setShowAuth] = useState(false)
+  const [subscription, setSubscription] = useState(null)
+  const [trial, setTrial] = useState({ active: false, daysLeft: 0 })
   const syncTimer = useRef(null)
 
   useEffect(() => {
@@ -1749,6 +1854,11 @@ export default function App() {
     if (last !== today) {
       localStorage.setItem('em-last-day', today)
       setStreak(s => s + 1)
+    }
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('sub') === 'success') {
+      setPage('home')
+      window.history.replaceState({}, '', '/')
     }
   }, [])
 
@@ -1761,7 +1871,16 @@ export default function App() {
           const data = await loadProgress(u.uid)
           if (data?.progress) setProgress(data.progress)
           if (data?.streak) setStreak(data.streak)
+          if (data?.subscription) setSubscription(data.subscription)
+          else {
+            const sub = await getSubscription(u.uid)
+            if (sub) setSubscription(sub)
+          }
+          setTrial(getTrialStatus(u))
         } catch {}
+      } else {
+        setSubscription(null)
+        setTrial({ active: false, daysLeft: 0 })
       }
     })
     return unsub
@@ -1808,6 +1927,16 @@ export default function App() {
   async function handleLogout() {
     await signOut(auth)
     setUser(null)
+    setSubscription(null)
+    setTrial({ active: false, daysLeft: 0 })
+  }
+
+  const hasAccess = subscription?.status === 'active' || trial?.active
+
+  function gatedPage(component) {
+    if (!user) return <PricingPage user={user} onAuthClick={() => setShowAuth(true)} subscription={subscription} trial={trial} />
+    if (!hasAccess) return <PricingPage user={user} onAuthClick={() => setShowAuth(true)} subscription={subscription} trial={trial} />
+    return component
   }
 
   if (authLoading) return <div className="auth-loading"><div className="auth-spinner" /></div>
@@ -1815,14 +1944,15 @@ export default function App() {
   return (
     <>
       <Nav page={page} setPage={setPage} streak={streak} user={user} onAuthClick={() => setShowAuth(true)} onLogout={handleLogout} />
-      {showAuth && <AuthModal onClose={() => setShowAuth(false)} onSuccess={(u) => { setUser(u); setShowAuth(false) }} />}
+      {showAuth && <AuthModal onClose={() => setShowAuth(false)} onSuccess={(u) => { setUser(u); setShowAuth(false); setTrial(getTrialStatus(u)) }} />}
       <main>
         {page === 'home' && <Home progress={progress} setPage={setPage} />}
-        {page === 'lessons' && <Lessons progress={progress} onComplete={completeLesson} />}
-        {page === 'quizzes' && <Quizzes progress={progress} onFinish={finishQuiz} />}
-        {page === 'vocabulary' && <Vocabulary progress={progress} onLearn={learnWord} />}
-        {page === 'ai' && <AITutor />}
-        {page === 'writing' && <WritingAssistant />}
+        {page === 'lessons' && gatedPage(<Lessons progress={progress} onComplete={completeLesson} />)}
+        {page === 'quizzes' && gatedPage(<Quizzes progress={progress} onFinish={finishQuiz} />)}
+        {page === 'vocabulary' && gatedPage(<Vocabulary progress={progress} onLearn={learnWord} />)}
+        {page === 'ai' && gatedPage(<AITutor />)}
+        {page === 'writing' && gatedPage(<WritingAssistant />)}
+        {page === 'pricing' && <PricingPage user={user} onAuthClick={() => setShowAuth(true)} subscription={subscription} trial={trial} />}
         {page === 'privacy' && <PrivacyPolicy />}
         {page === 'terms' && <TermsOfService />}
         {page === 'admin' && <AdminDashboard />}

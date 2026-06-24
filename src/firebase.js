@@ -25,4 +25,25 @@ export async function loadProgress(uid) {
   return snap.exists() ? snap.data() : null
 }
 
+export async function saveSubscription(uid, sub) {
+  await setDoc(doc(db, 'users', uid), { subscription: sub, updatedAt: Date.now() }, { merge: true })
+}
+
+export async function getSubscription(uid) {
+  const snap = await getDoc(doc(db, 'users', uid))
+  if (!snap.exists()) return null
+  return snap.data().subscription || null
+}
+
+const TRIAL_DAYS = 4
+
+export function getTrialStatus(user) {
+  if (!user) return { active: false, daysLeft: 0 }
+  const created = new Date(user.metadata.creationTime)
+  const now = new Date()
+  const diff = Math.floor((now - created) / (1000 * 60 * 60 * 24))
+  const daysLeft = Math.max(0, TRIAL_DAYS - diff)
+  return { active: daysLeft > 0, daysLeft }
+}
+
 export { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, signInWithPopup, sendPasswordResetEmail, updateProfile }

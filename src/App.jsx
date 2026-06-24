@@ -1221,7 +1221,7 @@ function PricingPage({ user, onAuthClick, subscription, trial }) {
       const data = await res.json()
       if (data.url) window.location.href = data.url
       else throw new Error(data.error)
-    } catch { alert(t.genericError) }
+    } catch (err) { alert(err?.message || t.genericError) }
     finally { setLoading(null) }
   }
 

@@ -1,7 +1,3 @@
-import Anthropic from '@anthropic-ai/sdk'
-
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_KEY })
-
 const LANG_NAMES = {
   ar: 'Arabic', tr: 'Turkish', fr: 'French', es: 'Spanish',
   ur: 'Urdu', fa: 'Persian', pt: 'Portuguese', hi: 'Hindi',
@@ -38,14 +34,34 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Invalid request' })
     }
 
-    const response = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1024,
-      system: getSystemPrompt(lang || 'ar'),
-      messages,
-    })
+    const systemPrompt = getSystemPrompt(lang || 'ar')
 
-    res.json({ text: response.content[0].text })
+    const contents = [
+      { role: 'user', parts: [{ text: systemPrompt }] },
+      { role: 'model', parts: [{ text: 'Understood. I am ready to help.' }] },
+      ...messages.map(m => ({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: typeof m.content === 'string' ? m.content : JSON.stringify(m.content) }],
+      })),
+    ]
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents, generationConfig: { maxOutputTokens: 1024 } }),
+      }
+    )
+
+    if (!response.ok) {
+      const err = await response.json()
+      throw new Error(err.error?.message || response.statusText)
+    }
+
+    const data = await response.json()
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+    res.json({ text })
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: err.message || 'Server error' })

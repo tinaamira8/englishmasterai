@@ -34,33 +34,29 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Invalid request' })
     }
 
-    const systemPrompt = getSystemPrompt(lang || 'ar')
-
-    const contents = [
-      { role: 'user', parts: [{ text: systemPrompt }] },
-      { role: 'model', parts: [{ text: 'Understood. I am ready to help.' }] },
-      ...messages.map(m => ({
-        role: m.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: typeof m.content === 'string' ? m.content : JSON.stringify(m.content) }],
-      })),
-    ]
-
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${process.env.GEMINI_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents, generationConfig: { maxOutputTokens: 1024 } }),
-      }
-    )
-
-    if (!response.ok) {
-      const err = await response.json()
-      throw new Error(err.error?.message || response.statusText)
-    }
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.GROQ_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'llama-3.1-8b-instant',
+        max_tokens: 1024,
+        messages: [
+          { role: 'system', content: getSystemPrompt(lang || 'ar') },
+          ...messages.map(m => ({
+            role: m.role,
+            content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content),
+          })),
+        ],
+      }),
+    })
 
     const data = await response.json()
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+    if (!response.ok) throw new Error(data.error?.message || response.statusText)
+
+    const text = data.choices?.[0]?.message?.content || ''
     res.json({ text })
   } catch (err) {
     console.error(err)

@@ -20,18 +20,24 @@ export default async function handler(req, res) {
 Always structure your response clearly. When you show corrections or rewrites, use clear formatting.
 Always include ${langName} explanations alongside English content.`
 
-    // Convert Anthropic-style content array to a single text for Gemini
-    const userText = messageContent.map(part => {
-      if (typeof part === 'string') return part
-      if (part.type === 'text') return part.text
-      if (part.type === 'image_url') return '[image attached]'
-      return ''
-    }).join('\n')
+    // Convert Anthropic-style content array to Gemini parts
+    const userParts = []
+    for (const part of messageContent) {
+      if (part.type === 'text') {
+        userParts.push({ text: part.text })
+      } else if (part.type === 'image' && part.source?.type === 'base64') {
+        userParts.push({ inlineData: { mimeType: part.source.media_type, data: part.source.data } })
+      }
+    }
+
+    if (userParts.length === 0) {
+      return res.status(400).json({ error: 'No content provided' })
+    }
 
     const contents = [
       { role: 'user', parts: [{ text: systemPrompt }] },
       { role: 'model', parts: [{ text: 'Understood. I am ready to help with English writing coaching.' }] },
-      { role: 'user', parts: [{ text: userText }] },
+      { role: 'user', parts: userParts },
     ]
 
     const response = await fetch(

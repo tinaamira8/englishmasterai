@@ -9,15 +9,19 @@ export default async function handler(req, res) {
     const { uid, email, plan } = req.body
     if (!uid || !email) return res.status(400).json({ error: 'Missing uid or email' })
 
+    const isLifetime = plan === 'lifetime'
+
     const priceId = plan === 'yearly'
       ? process.env.STRIPE_PRICE_YEARLY
-      : process.env.STRIPE_PRICE_MONTHLY
+      : plan === 'lifetime'
+        ? process.env.STRIPE_PRICE_LIFETIME
+        : process.env.STRIPE_PRICE_MONTHLY
 
     const session = await stripe.checkout.sessions.create({
-      mode: 'subscription',
+      mode: isLifetime ? 'payment' : 'subscription',
       payment_method_types: ['card'],
       customer_email: email,
-      metadata: { uid },
+      metadata: { uid, plan },
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${req.headers.origin || 'https://englishmasterai.com'}/?sub=success`,
       cancel_url: `${req.headers.origin || 'https://englishmasterai.com'}/?sub=cancel`,

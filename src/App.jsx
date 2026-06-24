@@ -1291,6 +1291,27 @@ function PricingPage({ user, onAuthClick, subscription, trial }) {
             {loading === 'yearly' ? '...' : subscription?.status === 'active' ? t.subscribed : t.subscribeNow}
           </button>
         </div>
+
+        <div className="pricing-card pricing-card-lifetime">
+          <div className="pricing-popular lifetime-badge">🔥 Limited Offer</div>
+          <div className="pricing-badge">Lifetime</div>
+          <div className="pricing-price">
+            <span className="pricing-amount">$99</span>
+            <span className="pricing-period"> once</span>
+          </div>
+          <div className="pricing-save">Pay once, use forever — no renewals</div>
+          <ul className="pricing-features">
+            <li>✓ Everything in all plans</li>
+            <li>✓ All future lessons & updates</li>
+            <li>✓ Unlimited AI Tutor forever</li>
+            <li>✓ Priority support</li>
+            <li>✓ Never pay again</li>
+          </ul>
+          <button className="btn-lifetime pricing-btn" onClick={() => handleCheckout('lifetime')}
+            disabled={loading || subscription?.status === 'active'}>
+            {loading === 'lifetime' ? '...' : subscription?.status === 'active' ? t.subscribed : 'Get Lifetime Access'}
+          </button>
+        </div>
       </div>
 
       <div className="pricing-methods">

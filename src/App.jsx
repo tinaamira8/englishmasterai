@@ -524,6 +524,7 @@ function Nav({ page, setPage, streak, user, onAuthClick, onLogout }) {
     { id: 'ai', label: t.aiTutor },
     { id: 'writing', label: t.writing },
     { id: 'pricing', label: t.pricing },
+    { id: 'ielts', label: '🎓 IELTS/TOEFL' },
     { id: 'leaderboard', label: '🏆' },
   ]
   const initials = user?.displayName ? user.displayName.slice(0, 2).toUpperCase() : user?.email?.slice(0, 2).toUpperCase()
@@ -1293,10 +1294,10 @@ function PricingPage({ user, onAuthClick, subscription, trial }) {
         </div>
 
         <div className="pricing-card pricing-card-lifetime">
-          <div className="pricing-popular lifetime-badge">🔥 Limited Offer</div>
+          <div className="pricing-popular lifetime-badge">🔥 Best Deal</div>
           <div className="pricing-badge">Lifetime</div>
           <div className="pricing-price">
-            <span className="pricing-amount">$99</span>
+            <span className="pricing-amount">$149</span>
             <span className="pricing-period"> once</span>
           </div>
           <div className="pricing-save">Pay once, use forever — no renewals</div>
@@ -1304,6 +1305,7 @@ function PricingPage({ user, onAuthClick, subscription, trial }) {
             <li>✓ Everything in all plans</li>
             <li>✓ All future lessons & updates</li>
             <li>✓ Unlimited AI Tutor forever</li>
+            <li>✓ 🎓 IELTS & TOEFL Prep included</li>
             <li>✓ Priority support</li>
             <li>✓ Never pay again</li>
           </ul>
@@ -1357,6 +1359,222 @@ function Leaderboard({ currentUid }) {
           ))}
         </div>
       )}
+    </div>
+  )
+}
+
+// ── IELTS / TOEFL Prep ────────────────────────────────────────────────────
+const IELTS_SECTIONS = [
+  {
+    id: 'overview', icon: '📋', title: 'IELTS vs TOEFL', subtitle: 'Which exam is right for you?',
+    content: [
+      { type: 'compare', rows: [
+        { label: 'Purpose', ielts: 'UK/Australia/Canada immigration & universities', toefl: 'US universities mainly' },
+        { label: 'Format', ielts: 'Paper or computer-based', toefl: 'Computer-based only' },
+        { label: 'Speaking', ielts: 'Face-to-face with examiner', toefl: 'Recorded responses' },
+        { label: 'Score', ielts: 'Band 0–9', toefl: 'Score 0–120' },
+        { label: 'Duration', ielts: '2 hours 45 min', toefl: 'About 3 hours' },
+        { label: 'Cost', ielts: '$200–250', toefl: '$180–300' },
+      ]},
+      { type: 'tip', body: '💡 Choose IELTS if you\'re going to UK, Australia, or Canada. Choose TOEFL if you\'re applying to US universities.' },
+    ],
+  },
+  {
+    id: 'reading', icon: '📖', title: 'Reading', subtitle: 'IELTS Band 6–9 strategies',
+    content: [
+      { type: 'text', body: 'The IELTS Reading section has 3 passages and 40 questions in 60 minutes. Speed and strategy are key.' },
+      { type: 'tips', title: 'Top Strategies', items: [
+        'Skim the passage first (2 min) — don\'t read every word',
+        'Read the questions BEFORE the passage',
+        'Use keywords from questions to find answers fast',
+        'Don\'t spend more than 20 min per passage',
+        'True/False/Not Given: "Not Given" means the text doesn\'t mention it at all',
+      ]},
+      { type: 'practice', questions: [
+        { q: 'The passage says climate change affects only coastal areas. Is this True, False, or Not Given?', options: ['True', 'False', 'Not Given'], answer: 1, explain: '"False" — the passage mentions effects on all regions, not just coastal areas.' },
+        { q: 'Which reading strategy saves the most time?', options: ['Reading every word carefully', 'Skimming first, then finding answers', 'Starting with the last paragraph', 'Ignoring the questions'], answer: 1, explain: 'Skimming gives you a map of the text so you find answers faster.' },
+      ]},
+    ],
+  },
+  {
+    id: 'writing', icon: '✍️', title: 'Writing', subtitle: 'Task 1 & Task 2 mastery',
+    content: [
+      { type: 'text', body: 'IELTS Writing has 2 tasks. Task 1 (20 min, 150 words): describe a chart/graph. Task 2 (40 min, 250 words): essay.' },
+      { type: 'tips', title: 'Task 2 Essay Structure (Band 7+)', items: [
+        'Introduction: paraphrase the question + your opinion (2–3 sentences)',
+        'Body paragraph 1: main point + example + explanation',
+        'Body paragraph 2: second point + example + explanation',
+        'Conclusion: summarize your view (2 sentences)',
+        'Use linking words: However, Furthermore, In contrast, As a result',
+      ]},
+      { type: 'phrases', title: 'High-scoring phrases', items: [
+        { en: 'It is widely acknowledged that...', ar: 'من المعروف على نطاق واسع أن...' },
+        { en: 'There are compelling reasons to suggest...', ar: 'هناك أسباب مقنعة تشير إلى...' },
+        { en: 'On the other hand...', ar: 'من ناحية أخرى...' },
+        { en: 'In conclusion, it can be argued that...', ar: 'في الختام، يمكن القول إن...' },
+        { en: 'This essay will examine...', ar: 'ستتناول هذه المقالة...' },
+      ]},
+    ],
+  },
+  {
+    id: 'listening', icon: '🎧', title: 'Listening', subtitle: '40 questions, 30 minutes',
+    content: [
+      { type: 'text', body: 'You hear each recording ONCE. The IELTS Listening test has 4 sections, getting harder as you go.' },
+      { type: 'tips', title: 'Listening Strategies', items: [
+        'Read questions before the audio starts',
+        'Underline keywords in the questions',
+        'Answers come in order — don\'t fall behind',
+        'Watch for synonyms — the audio uses different words than the question',
+        'For spelling questions: they always spell it out slowly',
+      ]},
+      { type: 'practice', questions: [
+        { q: 'In IELTS Listening, how many times do you hear each recording?', options: ['Once', 'Twice', 'Three times', 'As many times as you want'], answer: 0, explain: 'Each recording is played ONCE only — so preparation and focus are critical.' },
+        { q: 'What should you do BEFORE the audio starts?', options: ['Close your eyes and relax', 'Read the questions and underline keywords', 'Write your name', 'Check your answers'], answer: 1, explain: 'Reading questions first helps you know what to listen for.' },
+      ]},
+    ],
+  },
+  {
+    id: 'speaking', icon: '🗣️', title: 'Speaking', subtitle: 'Band 7+ techniques',
+    content: [
+      { type: 'text', body: 'IELTS Speaking is a 11–14 minute face-to-face interview. 3 parts: introduction, long turn (2 min speech), discussion.' },
+      { type: 'tips', title: 'Speaking Tips for Band 7+', items: [
+        'Don\'t memorize answers — examiners can tell',
+        'Use a range of vocabulary — avoid repeating the same words',
+        'It\'s OK to pause briefly to think — say "That\'s an interesting question..."',
+        'Give reasons and examples for every answer',
+        'Speak at a natural pace — not too fast, not too slow',
+      ]},
+      { type: 'phrases', title: 'Useful Speaking Phrases', items: [
+        { en: 'That\'s an interesting question...', ar: 'هذا سؤال مثير للاهتمام...' },
+        { en: 'What I mean is...', ar: 'ما أعنيه هو...' },
+        { en: 'For example, in my country...', ar: 'على سبيل المثال، في بلدي...' },
+        { en: 'From my perspective...', ar: 'من وجهة نظري...' },
+        { en: 'I\'d have to say that...', ar: 'يجب أن أقول إن...' },
+      ]},
+    ],
+  },
+  {
+    id: 'scores', icon: '🏆', title: 'Score Guide', subtitle: 'What score do you need?',
+    content: [
+      { type: 'bands', rows: [
+        { band: '9', toefl: '118–120', level: 'Expert', color: 'band-9', desc: 'Native-like proficiency' },
+        { band: '8', toefl: '110–117', level: 'Very Good', color: 'band-8', desc: 'Top universities (Harvard, Oxford)' },
+        { band: '7', toefl: '94–109', level: 'Good', color: 'band-7', desc: 'Most UK/US universities' },
+        { band: '6.5', toefl: '79–93', level: 'Competent', color: 'band-6', desc: 'Many universities, some jobs' },
+        { band: '6', toefl: '60–78', level: 'Competent', color: 'band-6', desc: 'Minimum for many programs' },
+        { band: '5.5', toefl: '46–59', level: 'Modest', color: 'band-5', desc: 'Some colleges accept this' },
+      ]},
+      { type: 'tip', body: '🎯 Most universities require IELTS 6.5–7.0. For UK immigration (Skilled Worker visa) you need IELTS 4.0–6.0 depending on the role.' },
+    ],
+  },
+]
+
+function IELTSPrep() {
+  const [activeSection, setActiveSection] = useState('overview')
+  const [quizAnswers, setQuizAnswers] = useState({})
+  const section = IELTS_SECTIONS.find(s => s.id === activeSection)
+
+  function renderContent(block, si) {
+    if (block.type === 'text') return <p key={si} className="lesson-text">{block.body}</p>
+    if (block.type === 'tip') return <div key={si} className="ielts-tip">{block.body}</div>
+    if (block.type === 'tips') return (
+      <div key={si} className="ielts-tips-box">
+        <h4>{block.title}</h4>
+        <ul>{block.items.map((item, i) => <li key={i}>{item}</li>)}</ul>
+      </div>
+    )
+    if (block.type === 'phrases') return (
+      <div key={si} className="ielts-phrases">
+        <h4>{block.title}</h4>
+        {block.items.map((item, i) => (
+          <div key={i} className="phrase-row">
+            <div className="phrase-en"><SpeakBtn text={item.en} size="sm" />{item.en}</div>
+            <div className="phrase-ar">{item.ar}</div>
+          </div>
+        ))}
+      </div>
+    )
+    if (block.type === 'compare') return (
+      <div key={si} className="ielts-compare">
+        <div className="compare-header"><span>Feature</span><span>🇬🇧 IELTS</span><span>🇺🇸 TOEFL</span></div>
+        {block.rows.map((row, i) => (
+          <div key={i} className="compare-row">
+            <span className="compare-label">{row.label}</span>
+            <span>{row.ielts}</span>
+            <span>{row.toefl}</span>
+          </div>
+        ))}
+      </div>
+    )
+    if (block.type === 'bands') return (
+      <div key={si} className="bands-table">
+        <div className="bands-header"><span>IELTS Band</span><span>TOEFL Score</span><span>Level</span><span>Who needs it</span></div>
+        {block.rows.map((row, i) => (
+          <div key={i} className={`band-row ${row.color}`}>
+            <span className="band-num">{row.band}</span>
+            <span>{row.toefl}</span>
+            <span>{row.level}</span>
+            <span>{row.desc}</span>
+          </div>
+        ))}
+      </div>
+    )
+    if (block.type === 'practice') return (
+      <div key={si} className="ielts-practice">
+        <h4>🎯 Practice Questions</h4>
+        {block.questions.map((q, qi) => {
+          const key = `${activeSection}-${si}-${qi}`
+          const selected = quizAnswers[key]
+          const answered = selected !== undefined
+          return (
+            <div key={qi} className="practice-q">
+              <p className="practice-question">{q.q}</p>
+              <div className="practice-options">
+                {q.options.map((opt, oi) => (
+                  <button key={oi}
+                    className={`practice-opt ${answered ? (oi === q.answer ? 'correct' : selected === oi ? 'wrong' : '') : ''}`}
+                    onClick={() => !answered && setQuizAnswers(a => ({ ...a, [key]: oi }))}>
+                    {opt}
+                  </button>
+                ))}
+              </div>
+              {answered && <div className="practice-explain">{selected === q.answer ? '✅ ' : '❌ '}{q.explain}</div>}
+            </div>
+          )
+        })}
+      </div>
+    )
+    return null
+  }
+
+  return (
+    <div className="page ielts-page">
+      <div className="ielts-header">
+        <h1>🎓 IELTS / TOEFL Prep</h1>
+        <p>Master the exams with proven strategies — explained in Arabic</p>
+      </div>
+      <div className="ielts-layout">
+        <div className="ielts-sidebar">
+          {IELTS_SECTIONS.map(s => (
+            <button key={s.id}
+              className={`ielts-nav-btn ${activeSection === s.id ? 'active' : ''}`}
+              onClick={() => setActiveSection(s.id)}>
+              <span>{s.icon}</span>
+              <span>{s.title}</span>
+            </button>
+          ))}
+        </div>
+        <div className="ielts-content">
+          <div className="ielts-section-header">
+            <span className="ielts-icon-lg">{section.icon}</span>
+            <div>
+              <h2>{section.title}</h2>
+              <p>{section.subtitle}</p>
+            </div>
+          </div>
+          {section.content.map((block, i) => renderContent(block, i))}
+        </div>
+      </div>
     </div>
   )
 }
@@ -2159,6 +2377,7 @@ export default function App() {
         {page === 'ai' && gatedPage(<AITutor />)}
         {page === 'writing' && gatedPage(<WritingAssistant />)}
         {page === 'pricing' && <PricingPage user={user} onAuthClick={() => setShowAuth(true)} subscription={subscription} trial={trial} />}
+        {page === 'ielts' && gatedPage(<IELTSPrep />)}
         {page === 'leaderboard' && <Leaderboard currentUid={user?.uid} />}
         {page === 'privacy' && <PrivacyPolicy />}
         {page === 'terms' && <TermsOfService />}
